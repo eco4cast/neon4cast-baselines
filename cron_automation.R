@@ -1,7 +1,7 @@
 library(cronR)
 
-home_dir <- "/home/rstudio"
-log_dir <- "/home/rstudio/log/cron"
+home_dir <-  path.expand("~")
+log_dir <- path.expand("~/log/cron")
 
 repo <- "neon4cast-baselines"
 
