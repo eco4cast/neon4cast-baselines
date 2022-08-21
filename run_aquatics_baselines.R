@@ -1,3 +1,5 @@
+renv::restore()
+
 print(paste0("Running Creating Aquatics baselines at ", Sys.time()))
 
 

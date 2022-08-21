@@ -17,21 +17,15 @@ sites <- data %>%
 
 
 # the weeks we need to forecast
-monday <- seq.Date(ymd("2021-01-03"), by = 7, length.out = 52) # all Sundays in 2021
-run.date <- today()
-run.month <- month(run.date)
 
-# forecast time (the sunday date stamp that maps to mmwrWeek)
-fx.time <- sundays[month(monday) == run.month]
-
-# forecast mmwrWeeks
-forecast.weeks <- MMWRweek(fx.time)$MMWRweek
+curr_week <-  ISOweek::ISOweek2date(paste0(ISOweek::ISOweek(Sys.Date()), "-1")) 
+fx.time <- seq.Date(ISOweek::ISOweek2date(curr_week), by = 7, length.out = 52) # all Sundays in 2021
 
 # Forecast is weekly mean and sd by site
 hist_means <- function(df, target.weeks){
   
   weekly.means <- df %>% 
-    group_by(site_id, mmwr_week) %>% 
+    group_by(site_id, mmw_week) %>% 
     summarise(mean = mean(observed),
               sd = sd(observed))
   

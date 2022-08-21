@@ -1,3 +1,5 @@
+renv::restore()
+
 print(paste0("Running Creating Terrestrial baselines at ", Sys.time()))
 
 generate_null_daily <- TRUE

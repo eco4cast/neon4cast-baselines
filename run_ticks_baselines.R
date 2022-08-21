@@ -1,3 +1,5 @@
+renv::restore()
+
 print(paste0("Running Creating ticks baselines at ", Sys.time()))
 
 
