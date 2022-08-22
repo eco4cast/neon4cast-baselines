@@ -25,7 +25,6 @@ last_day_abundance <- tibble(site_id = site_list,
                             variable = "abundance",
                             observed = NA)
 
-
 targets_richness <- targets |> 
   filter(variable == "richness") |> 
   bind_rows(last_day_richness) |> 
@@ -42,36 +41,35 @@ targets_abundance <- targets |>
 
 ## a single mean per site... obviously silly
 fc_richness <- targets_richness  %>% 
-  model(null = MEAN(richness)) %>%
-  forecast(h = "1 year")
+  model(null = MEAN(log(richness + 1))) %>%
+  generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
+  dplyr::rename(ensemble = .rep,
+                predicted = .sim) |> 
+  mutate(variable = "richness")
 
 fc_abundance <- targets_abundance  %>%
-  model(null = MEAN(abundance)) %>%
-  forecast(h = "1 year")
-
-
-efi_statistic_format <- function(df){
-  ## determine variable name
-  var <- attributes(df)$dist
-  ## Normal distribution: use distribution mean and variance
-  df %>% 
-    dplyr::mutate(sigma = sqrt( distributional::variance( .data[[var]] ) ) ) %>%
-    dplyr::rename(mu = .mean) %>%
-    dplyr::select(time, site_id, .model, mean, sd) %>%
-    tidyr::pivot_longer(c(mean, sd), names_to = "parameter", values_to = var) %>%
-    pivot_longer(tidyselect::all_of(var), names_to="variable", values_to = "predicted") |> 
-    mutate(family = "normal")
-}
+  model(null = MEAN(log(abundance + 1))) %>%
+  generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
+  dplyr::rename(ensemble = .rep,
+                predicted = .sim) |> 
+  mutate(variable = "abundance")
 
 fc_richness |> 
-  filter(site_id == "BARR") |> 
-autoplot()
+  filter(site_id %in% site_list[1:10], variable == "richness") |> 
+  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+  geom_line() +
+  facet_wrap(~site_id)
 
-efi_richness <- efi_statistic_format(fc_richness)
-efi_abundance <-  efi_statistic_format(fc_abundance)
-forecast <- bind_rows(efi_richness, efi_abundance) |> 
+targets |> 
+  filter(site_id %in% site_list[1:10], variable == "richness") |> 
+  ggplot(aes(x = time, y = observed)) +
+  geom_point() +
+  facet_wrap(~site_id)
+
+
+forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |> 
   mutate(start_time = lubridate::as_date(min(time)) - lubridate::weeks(1)) |> 
-  select(time, start_time, site_id, family, parameter, variable, predicted)
+  select(time, start_time, site_id, ensemble, variable, predicted)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "beetles"

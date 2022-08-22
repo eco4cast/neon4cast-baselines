@@ -7,7 +7,6 @@
 
 library(tidyverse)
 library(lubridate)
-library(MMWRweek)
 
 # first load the target data set
 data <- read_csv("https://data.ecoforecast.org/neon4cast-targets/ticks/ticks-targets.csv.gz", guess_max = 1e6)
@@ -17,33 +16,37 @@ sites <- data %>%
 
 
 # the weeks we need to forecast
-
+curr_iso_week <- as.numeric(stringr::str_sub(ISOweek::ISOweek(Sys.Date()),7, 8))
+curr_year <- lubridate::year(Sys.Date())
 curr_week <-  ISOweek::ISOweek2date(paste0(ISOweek::ISOweek(Sys.Date()), "-1")) 
-fx.time <- seq.Date(ISOweek::ISOweek2date(curr_week), by = 7, length.out = 52) # all Sundays in 2021
+fx.time <- seq.Date(curr_week, by = 7, length.out = 52) # all Sundays in 2021
 
 # Forecast is weekly mean and sd by site
 hist_means <- function(df, target.weeks){
   
+  focal_weeks <- (as.numeric(stringr::str_sub(ISOweek::date2ISOweek(target.weeks), 7, 8)))
+  
   weekly.means <- df %>% 
-    group_by(site_id, mmw_week) %>% 
+    mutate(iso_week = as.numeric(stringr::str_sub(iso_week, 7, 8))) |> 
+    group_by(site_id, iso_week) %>% 
     summarise(mean = mean(observed),
               sd = sd(observed))
   
   
   # need to fill in NAs and need to do on all data before sub-setting to target weeks
-  filler.tb <- tibble(site_id = rep(sites, length(10:44)),
-                      mmwr_week = rep(10:44, each = length(sites)))
+  filler.tb <- tibble(site_id = rep(sites, length(1:44)),
+                      iso_week = rep(1:44, each = length(sites)))
   
-  all.weeks <- left_join(filler.tb, weekly.means, by = c("site_id", "mmwr_week")) %>% 
-    arrange(site_id, mmwr_week)
+  all.weeks <- left_join(filler.tb, weekly.means, by = c("site_id", "iso_week")) %>% 
+    arrange(site_id, iso_week)
   
   # not all weeks will be accounted for - linearly interpolate if missing
   gap.filled <- all.weeks %>%
     group_by(site_id) %>%
-    mutate(mean = approx(x = mmwr_week, y = mean, xout = mmwr_week, rule = 2)$y,
+    mutate(mean = approx(x = iso_week, y = mean, xout = iso_week, rule = 2)$y,
            sd = replace_na(sd, mean(sd, na.rm = TRUE)),
-           sd = replace(sd, sd == 0, mean(sd))) %>% 
-    filter(mmwr_week %in% target.weeks)
+           sd = replace(sd, sd == 0, mean(sd))) |> 
+    filter(iso_week  %in% focal_weeks)
   
   # now each week has a mean - sort of
   return(gap.filled)
@@ -62,7 +65,7 @@ create_ensembles <- function(df, nmc = 500, forecast.year = 2021) {
     sdLog <- sqrt(log(1 + (sd^2 / mu^2)))
     sim <- data.frame(
       site_id = df$site_id[[i]],
-      mmwr_week = df$mmwr_week[[i]],
+      iso_week = df$iso_week[[i]],
       ensemble = 1:nmc,
       density = rlnorm(nmc, meanLog, sdLog)
     )
@@ -73,27 +76,37 @@ create_ensembles <- function(df, nmc = 500, forecast.year = 2021) {
   ens <- 1:nrow(df) %>% 
     map_dfr(~ log_norm_sim(df, .x)) %>%
     as_tibble() %>%
-    mutate(year = forecast.year,
-           time = MMWRweek2Date(year, mmwr_week)) %>%
-    rename(amblyomma_americanum = density)
+    mutate(year = ifelse(iso_week < curr_iso_week, curr_year + 1, curr_year),
+           iso_week = stringr::str_pad(iso_week, width = 2,side = "left",pad = 0),
+           iso_week = paste0(year, "-W",iso_week,"-1"),
+           time = ISOweek::ISOweek2date(iso_week))
   
   return(ens)
   
 }
 
 # get the forecasts we want
-forecast <- hist_means(data, forecast.weeks)
+forecast <- hist_means(data, fx.time)
 
 # generate ensembles for uncertainty and scoring
-ensembles <- create_ensembles(forecast)
+ensembles <- create_ensembles(forecast, curr_iso_week, curr_year)
 
 # finalize for EFI submission
 forecast.submit <- ensembles %>% 
-  select(-year, -mmwr_week) %>% 
-  rename(predicted = amblyomma_americanum) |> 
+  select(-year, -iso_week) %>% 
+  rename(predicted = density) |> 
   mutate(variable = "amblyomma_americanum") |> 
   mutate(start_time = lubridate::as_date(min(time)) - lubridate::weeks(1)) |> 
-  select(time, start_time, site_id, variable, ensemble, predicted)
+  select(time, start_time, site_id, variable, ensemble, predicted) |> 
+  arrange(site_id, time)
+
+ggplot(forecast.submit, aes(x = time, y = predicted)) +
+  geom_point() +
+  facet_wrap(~site_id)
+
+ggplot(data, aes(x = time, y = observed)) +
+  geom_point() +
+  facet_wrap(~site_id)
 
 # Save file as CSV in the EFI format
 # [theme_name]-[time]-[team_name].csv

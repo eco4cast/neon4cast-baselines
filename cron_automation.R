@@ -40,7 +40,7 @@ cmd <- cronR::cron_rscript(rscript = file.path(home_dir, repo, "run_beetles_base
                            log_append = FALSE,
                            workdir = file.path(home_dir, repo),
                            trailing_arg = paste0("curl -fsS -m 10 --retry 5 -o /dev/null ", health_checks_url))
-cronR::cron_add(command = cmd, frequency = "0 12 * * MON", id = 'beetles-null')
+cronR::cron_add(command = cmd, frequency = "0 12 * * SUN", id = 'beetles-null')
 
 # Ticks
 health_checks_url <- "https://hc-ping.com/9fd0a2f4-13b3-4d11-880b-1487a1d801ca"
@@ -49,4 +49,4 @@ cmd <- cronR::cron_rscript(rscript = file.path(home_dir, repo,"run_ticks_baselin
                            log_append = FALSE,
                            workdir = file.path(home_dir, repo),
                            trailing_arg = paste0("curl -fsS -m 10 --retry 5 -o /dev/null ", health_checks_url))
-cronR::cron_add(command = cmd, frequency = "0 13 1 * *", id = 'ticks-null')
+cronR::cron_add(command = cmd, frequency = "0 1 * * SUN", id = 'ticks-null')
