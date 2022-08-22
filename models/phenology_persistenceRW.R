@@ -30,11 +30,11 @@ RW_forecasts <- purrr::pmap_dfr(site_var_combinations, RW_forecast)
 RW_forecasts_EFI <- RW_forecasts %>%
   rename(ensemble = .rep,
          predicted = .sim) %>%
-  group_by(site_id, variable) %>%
-  mutate(start_time = min(time) - 1) %>%
-  select(time, start_time, site_id, ensemble, variable, predicted)  %>%
   # For the EFI challenge we only want the forecast for future
-  filter(time > Sys.Date())
+  filter(time > Sys.Date()) %>%
+  group_by(site_id, variable) %>%
+  mutate(start_time = min(time) - lubridate::days(1)) %>%
+  select(time, start_time, site_id, ensemble, variable, predicted)  
 
 # 4. Write forecast file
 forecast_file <- paste("phenology", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")

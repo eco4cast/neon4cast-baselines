@@ -7,7 +7,7 @@ RW_forecast <- function(site, var, h,
   forecast_starts <- targets %>%
     dplyr::filter(!is.na(observed) & site_id == site & variable == var) %>%
     # Start the day after the most recent non-NA value
-    dplyr::summarise(start_date = max(time) + 1) %>% # Date
+    dplyr::summarise(start_date = max(time) + lubridate::days(1)) %>% # Date
     dplyr::mutate(h = (Sys.Date() - start_date) + h) %>% # Horizon value
     dplyr::ungroup()
   
