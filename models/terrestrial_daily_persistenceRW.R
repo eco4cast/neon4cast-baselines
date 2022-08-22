@@ -4,7 +4,9 @@ library(fable)
 
 source('./R/fablePersistenceModelFunction.R')
 # 1.Read in the targets data
-targets <- readr::read_csv("https://data.ecoforecast.org/neon4cast-targets/terrestrial_daily/terrestrial_daily-targets.csv.gz", guess_max = 1e6)
+targets <- readr::read_csv("https://data.ecoforecast.org/neon4cast-targets/terrestrial_daily/terrestrial_daily-targets.csv.gz", guess_max = 1e6) %>%
+  filter(observed > 0 &
+           variable == 'nee')
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%
@@ -16,7 +18,7 @@ targets_ts <- targets %>%
 site_var_combinations <- expand.grid(site = unique(targets$site_id),
                                      var = unique(targets$variable)) %>%
   # assign the transformation depending on the variable. le is logged
-  mutate(transformation = ifelse(var == 'le', 'log', 'none')) %>%
+  mutate(transformation = 'none') %>%
   mutate(boot_number = 200,
          h = 35,
          bootstrap = T, 
