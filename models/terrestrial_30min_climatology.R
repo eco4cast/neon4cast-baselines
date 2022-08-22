@@ -189,7 +189,7 @@ forecast_model_id <- team_name
 #                                        stop_time = last(fx_time))
 
 neon4cast::submit(forecast_file = ncfname, 
-                  metadata = meta_data_filename, 
+                  #metadata = meta_data_filename, 
                   ask = FALSE)
 
 unlink(ncfname)
