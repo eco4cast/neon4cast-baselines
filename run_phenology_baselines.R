@@ -8,5 +8,5 @@ source("models/phenology_climatology.R")
 print(paste0("Completed daily climatology ", Sys.time()))
 
 print(paste0("Running daily persistence at ", Sys.time()))
-source("models/phenology_persistence.R")
-print(paste0("Completed daily persistence ", Sys.time()))
+source("models/phenology_persistenceRW.R")
+print(paste0("Completed daily persistenceRW ", Sys.time()))
