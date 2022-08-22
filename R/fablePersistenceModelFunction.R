@@ -58,6 +58,10 @@ RW_daily_forecast <- function(site, var, h,
       RW_model <- targets_use %>%
         fabletools::model(RW = fable::RW(observed))
     }
+    if (transformation == 'sqrt') {
+      RW_model <- targets_use %>%
+        fabletools::model(RW = fable::RW(sqrt(observed)))
+    }
     
     if (bootstrap == T) {
       forecast <- RW_model %>% fabletools::generate(
