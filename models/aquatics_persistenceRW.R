@@ -4,7 +4,8 @@ library(fable)
 source('./R/fablePersistenceModelFunction.R')
 
 # 1.Read in the targets data
-targets <- read_csv('https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz')
+targets <- read_csv('https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz') %>%
+  mutate(observed = ifelse(observed == 0, 0.00001, observed))
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%
@@ -16,8 +17,8 @@ targets_ts <- targets %>%
 # Requires a dataframe that has each of the variable in the RW_forecast function
 site_var_combinations <- expand.grid(site = unique(targets$site_id),
                                      var = unique(targets$variable)) %>%
-  # assign the transformation depending on the variable. chla and oxygen get a log(x+1) transofrmation
-  mutate(transformation = ifelse(var %in% c('chla', 'oxygen'), 'log1p', 'none')) %>%
+  # assign the transformation depending on the variable. chla and oxygen get a log(x) transformation
+  mutate(transformation = ifelse(var %in% c('chla', 'oxygen'), 'log', 'none')) %>%
   mutate(boot_number = 200,
          h = 35,
          bootstrap = T, 
