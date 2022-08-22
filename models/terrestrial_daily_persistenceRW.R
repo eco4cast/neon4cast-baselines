@@ -23,7 +23,7 @@ site_var_combinations <- expand.grid(site = unique(targets$site_id),
          verbose = T)
 
 # Runs the RW forecast for each combination of variable and site_id
-RW_forecasts <- purrr::pmap_dfr(site_var_combinations, RW_forecast) 
+RW_forecasts <- purrr::pmap_dfr(site_var_combinations, RW_daily_forecast) 
 
 # convert the output into EFI standard
 RW_forecasts_EFI <- RW_forecasts %>%

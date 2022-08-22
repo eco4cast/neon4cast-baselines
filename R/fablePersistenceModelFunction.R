@@ -1,6 +1,6 @@
 
 # Function carry out a random walk forecast
-RW_forecast <- function(site, var, h,
+RW_daily_forecast <- function(site, var, h,
                         bootstrap = FALSE, boot_number = 200, 
                         transformation = 'none', verbose = TRUE,...) {
   # Work out when the forecast should start
