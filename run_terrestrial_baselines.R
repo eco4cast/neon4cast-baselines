@@ -8,9 +8,10 @@ generate_null_30min <- TRUE
 if(generate_null_daily){
   print(paste0("Running daily climatology at ", Sys.time()))
   source("models/terrestrial_daily_climatology.R")
+  print(paste0("Completed daily climatology at ", Sys.time()))
   print(paste0("Running daily persistence at ", Sys.time()))
   source("models/terrestrial_daily_persistenceRW.R")
-  print(paste0("Completed daily Null at ", Sys.time()))
+  print(paste0("Completed daily persistence at ", Sys.time()))
   
 }
 

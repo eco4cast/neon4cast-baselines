@@ -83,4 +83,6 @@ readr::write_csv(forecast, filename)
 neon4cast::submit(forecast_file = filename, 
                   ask = FALSE)
 
+unlink(filename)
+
 

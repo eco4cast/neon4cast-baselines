@@ -2,11 +2,11 @@ library(tidyverse)
 library(tsibble)
 library(fable)
 
-source('./R/fablePersistenceModelFunction.R')
+source('R/fablePersistenceModelFunction.R')
 # 1.Read in the targets data
+# We are not doing a peristence for le right now.
 targets <- readr::read_csv("https://data.ecoforecast.org/neon4cast-targets/terrestrial_daily/terrestrial_daily-targets.csv.gz", guess_max = 1e6) %>%
-  filter(observed > 0 &
-           variable == 'nee')
+  filter(variable == 'nee')
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%
@@ -36,6 +36,12 @@ RW_forecasts_EFI <- RW_forecasts %>%
   group_by(site_id, variable) %>%
   mutate(start_time = min(time) - lubridate::days(1)) %>%
   select(time, start_time, site_id, ensemble, variable, predicted) 
+
+#RW_forecasts_EFI |> 
+#  filter(site_id %in% unique(RW_forecasts_EFI$site_id)[1:24]) |> 
+#  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+#  geom_line() +
+#  facet_wrap(~site_id)
 
 # 4. Write forecast file
 forecast_file <- paste("terrestrial_daily", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")

@@ -36,6 +36,13 @@ RW_forecasts_EFI <- RW_forecasts %>%
   mutate(start_time = min(time) - lubridate::days(1)) %>%
   select(time, start_time, site_id, ensemble, variable, predicted)  
 
+#RW_forecasts_EFI |> 
+#  filter(variable == "gcc_90") |> 
+#  filter(site_id %in% unique(RW_forecasts_EFI$site_id)[1:24]) |> 
+#  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+#  geom_line() +
+#  facet_wrap(~site_id)
+
 # 4. Write forecast file
 forecast_file <- paste("phenology", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")
 

@@ -117,10 +117,8 @@ file.name <- paste0(theme_name, "-", time, "-", team_name, ".csv.gz")
 
 write_csv(forecast.submit, file.name)
 
-
-
 neon4cast::submit(forecast_file = file.name, 
                   metadata = NULL, 
                   ask = FALSE)
 
-
+unlink(file.name)

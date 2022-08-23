@@ -1,11 +1,11 @@
 library(tidyverse)
 library(tsibble)
 library(fable)
-source('./R/fablePersistenceModelFunction.R')
+source('R/fablePersistenceModelFunction.R')
 
 # 1.Read in the targets data
 targets <- read_csv('https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz') %>%
-  mutate(observed = ifelse(observed == 0, 0.00001, observed))
+  mutate(observed = ifelse(observed == 0 & variable == "chla", 0.00001, observed))
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%
@@ -36,6 +36,12 @@ RW_forecasts_EFI <- RW_forecasts %>%
   group_by(site_id, variable) %>%
   mutate(start_time = min(time) - lubridate::days(1)) %>%
   select(time, start_time, site_id, ensemble, variable, predicted) 
+
+#RW_forecasts_EFI |> 
+#  filter(variable == "chla") |> 
+#  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+#  geom_line() +
+#  facet_wrap(~site_id)
 
 # 4. Write forecast file
 forecast_file <- paste("aquatics", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")
