@@ -117,16 +117,16 @@ model_metadata <- list(
   )
 )
 
-meta_data_filename <- neon4cast::generate_metadata(forecast_file = forecast_file,
-                                                   team_list = team_list,
-                                                   model_metadata = model_metadata)
+#meta_data_filename <- neon4cast::generate_metadata(forecast_file = forecast_file,
+#                                                   team_list = team_list,
+#                                                   model_metadata = model_metadata)
 
 neon4cast::submit(forecast_file = forecast_file, 
                   metadata = NULL, 
                   ask = FALSE)
 
 unlink(forecast_file)
-unlink(meta_data_filename)
+#unlink(meta_data_filename)
 
 message(paste0("Completed null model generation ", Sys.time()))
 

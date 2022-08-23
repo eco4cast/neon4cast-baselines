@@ -193,7 +193,7 @@ neon4cast::submit(forecast_file = ncfname,
                   ask = FALSE)
 
 unlink(ncfname)
-unlink(meta_data_filename)
+#unlink(meta_data_filename)
 
 
 
