@@ -28,8 +28,14 @@
     "EFIstandards": {
       "Package": "EFIstandards",
       "Version": "0.1.1",
-      "Source": "unknown",
-      "Hash": "d962469bf36de3b6a0dd193ffc8c3634",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "EFIstandards",
+      "RemoteUsername": "eco4cast",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "95b55bd6b37b058dd5f996787871000c9a462d9f",
+      "Hash": "37964b8dde5828db6035a0dd915d253d",
       "Requirements": [
         "EML",
         "udunits2",
@@ -77,14 +83,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "af0e1955cb80bb36b7988cc657db261e",
-      "Requirements": []
-    },
-    "MMWRweek": {
-      "Package": "MMWRweek",
-      "Version": "0.1.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4329e57e2536e12afe479e8571416dbc",
       "Requirements": []
     },
     "Matrix": {
@@ -206,7 +204,7 @@
       "Package": "arrow",
       "Version": "8.0.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Hash": "58b7ef7a5c997e324767b86ae0bb0896",
       "Requirements": [
         "R6",
