@@ -20,3 +20,5 @@ if(generate_null_30min){
   source("models/terrestrial_30min_climatology.R")
   print(paste0("Completed 30 min Null at ", Sys.time()))  
 }
+
+RCurl::url.exists("https://hc-ping.com/bbe3ddc7-4020-4c53-bb13-08580d765e32")
