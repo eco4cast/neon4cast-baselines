@@ -90,7 +90,21 @@ forecast_tibble <- bind_rows(forecast_tibble1, forecast_tibble2)
 
 foreast <- right_join(forecast, forecast_tibble)
 
+site_count <- forecast %>% 
+  select(time, site_id, variable, clim_mean, clim_sd) %>% 
+  filter(!is.na(clim_mean)) |> 
+  group_by(site_id, variable) %>% 
+  summarize(count = n(), .groups = "drop") |> 
+  filter(count > 2) |> 
+  distinct() |> 
+  pull(site_id)
+  
+
+
+
+
 combined <- forecast %>% 
+  filter(site_id %in% site_count) |> 
   select(time, site_id, variable, clim_mean, clim_sd) %>% 
   rename(mean = clim_mean,
          sd = clim_sd) %>% 
