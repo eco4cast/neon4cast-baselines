@@ -46,6 +46,11 @@ RW_forecasts_EFI <- RW_forecasts %>%
 # 4. Write forecast file
 forecast_file <- paste("aquatics", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")
 
+RW_forecasts_EFI <- RW_forecasts_EFI |> 
+  filter(variable != "ch")
+
+
+
 write_csv(RW_forecasts_EFI, forecast_file)
 
 neon4cast::submit(forecast_file = forecast_file,
