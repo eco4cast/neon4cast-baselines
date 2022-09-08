@@ -10,7 +10,7 @@ efi_statistic_format <- function(df){
   df %>% 
     dplyr::mutate(sigma = sqrt( distributional::variance( .data[[var]] ) ) ) %>%
     dplyr::rename(mu = .mean) %>%
-    dplyr::select(time, site_id, .model, mu, sigma) %>%
+    dplyr::select(datetime, site_id, .model, mu, sigma) %>%
     tidyr::pivot_longer(c(mu, sigma), names_to = "parameter", values_to = var) %>%
     pivot_longer(tidyselect::all_of(var), names_to="variable", values_to = "predicted") |> 
     mutate(family = "normal")
@@ -28,7 +28,7 @@ curr_date <- ISOweek::ISOweek2date(paste0(curr_iso_week, "-1"))
 site_list <- unique(targets$site_id)
 
 last_day <- tibble(site_id = site_list,
-                   time = rep(curr_date, length(site_list)),
+                   datetime = rep(curr_date, length(site_list)),
                    variable = "amblyomma_americanum",
                    observed = NA)
 
@@ -38,7 +38,7 @@ targets <- targets |>
   filter(variable == "amblyomma_americanum") |> 
   bind_rows(last_day) |> 
   select(-variable) |> 
-  as_tsibble(index = time, key = site_id)
+  as_tsibble(index = datetime, key = site_id)
 
 ## a single mean per site... obviously silly
 forecast <- targets  %>% 
@@ -47,14 +47,14 @@ forecast <- targets  %>%
   dplyr::rename(ensemble = .rep,
                 predicted = .sim) |> 
   mutate(variable = "amblyomma_americanum") |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::weeks(1)) |> 
-  select(time, start_time, site_id, ensemble, variable, predicted)
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1)) |> 
+  select(datetime, reference_datetime, site_id, ensemble, variable, predicted)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "ticks"
-time <- min(forecast$time)
+datetime <- min(forecast$datetime)
 team_name <- "mean"
-filename <- paste0(theme_name, "-", time, "-", team_name, ".csv.gz")
+filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 ## Store the forecast products
 readr::write_csv(forecast, filename)

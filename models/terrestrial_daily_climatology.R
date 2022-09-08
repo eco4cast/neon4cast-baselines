@@ -46,7 +46,7 @@ sites <- read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-targets/
 site_names <- sites$field_site_id
 
 target_clim <- targets %>%  
-  mutate(doy = yday(time)) %>% 
+  mutate(doy = yday(datetime)) %>% 
   group_by(doy, site_id, variable) %>% 
   summarise(clim_mean = mean(observed, na.rm = TRUE),
             clim_sd = sd(observed, na.rm = TRUE),
@@ -68,7 +68,7 @@ forecast_doy <- yday(forecast_dates)
 forecast <- target_clim %>%
   mutate(doy = as.integer(doy)) %>% 
   filter(doy %in% forecast_doy) %>% 
-  mutate(time = as_date(ifelse(doy > last(doy),
+  mutate(datetime = as_date(ifelse(doy > last(doy),
                                as_date((doy-1), origin = paste(year(Sys.Date())+1, "01", "01", sep = "-")),
                                as_date((doy-1), origin = paste(year(Sys.Date()), "01", "01", sep = "-")))))
 
@@ -78,11 +78,11 @@ for(i in 1:length(subseted_site_names)){
   site_vector <- c(site_vector, rep(subseted_site_names[i], length(forecast_dates)))
 }
 
-forecast_tibble1 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble1 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "nee")
 
-forecast_tibble2 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble2 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "nee")
 
@@ -91,7 +91,7 @@ forecast_tibble <- bind_rows(forecast_tibble1, forecast_tibble2)
 foreast <- right_join(forecast, forecast_tibble)
 
 site_count <- forecast %>% 
-  select(time, site_id, variable, clim_mean, clim_sd) %>% 
+  select(datetime, site_id, variable, clim_mean, clim_sd) %>% 
   filter(!is.na(clim_mean)) |> 
   group_by(site_id, variable) %>% 
   summarize(count = n(), .groups = "drop") |> 
@@ -105,7 +105,7 @@ site_count <- forecast %>%
 
 combined <- forecast %>% 
   filter(site_id %in% site_count) |> 
-  select(time, site_id, variable, clim_mean, clim_sd) %>% 
+  select(datetime, site_id, variable, clim_mean, clim_sd) %>% 
   rename(mean = clim_mean,
          sd = clim_sd) %>% 
   group_by(site_id, variable) %>% 
@@ -114,18 +114,18 @@ combined <- forecast %>%
 combined <- combined %>%
   pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "predicted") |> 
   mutate(family = "normal") |> 
-  mutate(start_time = min(combined$time) - lubridate::days(1)) |> 
-  select(time, start_time, site_id, variable, family, parameter, predicted)
+  mutate(reference_datetime = min(combined$datetime) - lubridate::days(1)) |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted)
 
 combined %>% 
   filter(variable == "nee") |> 
   pivot_wider(names_from = parameter, values_from = predicted) %>% 
-  ggplot(aes(x = time)) +
+  ggplot(aes(x = datetime)) +
   geom_ribbon(aes(ymin=mu - sigma*1.96, ymax=mu + sigma*1.96), alpha = 0.1) + 
   geom_point(aes(y = mu)) +
   facet_wrap(~site_id)
 
-forecast_file <- paste("terrestrial_daily", min(combined$time), "climatology.csv.gz", sep = "-")
+forecast_file <- paste("terrestrial_daily", min(combined$datetime), "climatology.csv.gz", sep = "-")
 
 write_csv(combined, forecast_file)
 

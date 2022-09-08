@@ -9,7 +9,7 @@ targets <- read_csv('https://data.ecoforecast.org/neon4cast-targets/aquatics/aqu
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%
-  as_tsibble(key = c('variable', 'site_id'), index = 'time') %>%
+  as_tsibble(key = c('variable', 'site_id'), index = 'datetime') %>%
   # add NA values up to today (index)
   fill_gaps(.end = Sys.Date())
 
@@ -29,13 +29,14 @@ RW_forecasts <- purrr::pmap_dfr(site_var_combinations, RW_daily_forecast)
 
 # convert the output into EFI standard
 RW_forecasts_EFI <- RW_forecasts %>%
-  rename(ensemble = .rep,
+  rename(parameter = .rep,
          predicted = .sim) %>%
   # For the EFI challenge we only want the forecast for future
-  filter(time > Sys.Date()) %>%
+  filter(datetime > Sys.Date()) %>%
   group_by(site_id, variable) %>%
-  mutate(start_time = min(time) - lubridate::days(1)) %>%
-  select(time, start_time, site_id, ensemble, variable, predicted) 
+  mutate(reference_datetime = min(datetime) - lubridate::days(1),
+         family = "ensemble") %>%
+  select(datetime, reference_datetime, site_id, family, parameter, variable, predicted) 
 
 #RW_forecasts_EFI |> 
 #  filter(variable == "chla") |> 
@@ -44,7 +45,7 @@ RW_forecasts_EFI <- RW_forecasts %>%
 #  facet_wrap(~site_id)
 
 # 4. Write forecast file
-forecast_file <- paste("aquatics", min(RW_forecasts_EFI$time), "persistenceRW.csv.gz", sep = "-")
+forecast_file <- paste("aquatics", min(RW_forecasts_EFI$datetime), "persistenceRW.csv.gz", sep = "-")
 
 RW_forecasts_EFI <- RW_forecasts_EFI |> 
   filter(variable != "ch")

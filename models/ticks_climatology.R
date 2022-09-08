@@ -19,7 +19,7 @@ sites <- data %>%
 curr_iso_week <- as.numeric(stringr::str_sub(ISOweek::ISOweek(Sys.Date()),7, 8))
 curr_year <- lubridate::year(Sys.Date())
 curr_week <-  ISOweek::ISOweek2date(paste0(ISOweek::ISOweek(Sys.Date()), "-1")) 
-fx.time <- seq.Date(curr_week, by = 7, length.out = 52) # all Sundays in 2021
+fx.datetime <- seq.Date(curr_week, by = 7, length.out = 52) # all Sundays in 2021
 
 # Forecast is weekly mean and sd by site
 hist_means <- function(df, target.weeks){
@@ -79,14 +79,14 @@ create_ensembles <- function(df, nmc = 500, forecast.year = 2021) {
     mutate(year = ifelse(iso_week < curr_iso_week, curr_year + 1, curr_year),
            iso_week = stringr::str_pad(iso_week, width = 2,side = "left",pad = 0),
            iso_week = paste0(year, "-W",iso_week,"-1"),
-           time = ISOweek::ISOweek2date(iso_week))
+           datetime = ISOweek::ISOweek2date(iso_week))
   
   return(ens)
   
 }
 
 # get the forecasts we want
-forecast <- hist_means(data, fx.time)
+forecast <- hist_means(data, fx.datetime)
 
 # generate ensembles for uncertainty and scoring
 ensembles <- create_ensembles(forecast, curr_iso_week, curr_year)
@@ -94,26 +94,28 @@ ensembles <- create_ensembles(forecast, curr_iso_week, curr_year)
 # finalize for EFI submission
 forecast.submit <- ensembles %>% 
   select(-year, -iso_week) %>% 
-  rename(predicted = density) |> 
-  mutate(variable = "amblyomma_americanum") |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::weeks(1)) |> 
-  select(time, start_time, site_id, variable, ensemble, predicted) |> 
-  arrange(site_id, time)
+  rename(predicted = density,
+         parameter = ensemble) |> 
+  mutate(variable = "amblyomma_americanum",
+         family = "ensemble") |> 
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1)) |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
+  arrange(site_id, datetime)
 
-ggplot(forecast.submit, aes(x = time, y = predicted)) +
+ggplot(forecast.submit, aes(x = datetime, y = predicted)) +
   geom_point() +
   facet_wrap(~site_id)
 
-ggplot(data, aes(x = time, y = observed)) +
+ggplot(data, aes(x = datetime, y = observed)) +
   geom_point() +
   facet_wrap(~site_id)
 
 # Save file as CSV in the EFI format
 # [theme_name]-[time]-[team_name].csv
 theme_name <- "ticks"
-time <- as.character(min(forecast.submit$time))
+datetime <- as.character(min(forecast.submit$datetime))
 team_name <- "EFI_avg_null"
-file.name <- paste0(theme_name, "-", time, "-", team_name, ".csv.gz")
+file.name <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 write_csv(forecast.submit, file.name)
 

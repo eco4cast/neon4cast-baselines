@@ -28,9 +28,9 @@ site_names <- read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-tar
   dplyr::pull(field_site_id)
 
 start_forecast <- as.POSIXct(Sys.Date(),tz="UTC")
-fx_time <- seq(start_forecast, start_forecast + days(35), by = "30 min")
+fx_datetime <- seq(start_forecast, start_forecast + days(35), by = "30 min")
 
-nee_fx = le_fx = array(NA, dim=c(length(fx_time),length(site_names),ne)) ## dimensions: time, space, ensemble
+nee_fx = le_fx = array(NA, dim=c(length(fx_datetime),length(site_names),ne)) ## dimensions: datetime, space, ensemble
 
 ## Forecast by site
 for(s in 1:length(site_names)){
@@ -38,47 +38,47 @@ for(s in 1:length(site_names)){
   site_data_var <- terrestrial_targets %>%
     filter(site_id == site_names[s])
   
-  max_time <- max(site_data_var$time) + days(1)
+  max_datetime <- max(site_data_var$datetime) + days(1)
   
   
-  min_time <- min(which(!is.na(site_data_var$observed)))
+  min_datetime <- min(which(!is.na(site_data_var$observed)))
   # This is key here - I added 16 days on the end of the data for the forecast period
   
-  full_time1 <- tibble(time = seq(site_data_var$time[min_time], max(site_data_var$time), by = "30 min"),
+  full_datetime1 <- tibble(datetime = seq(site_data_var$datetime[min_datetime], max(site_data_var$datetime), by = "30 min"),
                       variable = "nee")
   
-  full_time2 = tibble(time = seq(site_data_var$time[min_time], max(site_data_var$time), by = "30 min"),
+  full_datetime2 = tibble(datetime = seq(site_data_var$datetime[min_datetime], max(site_data_var$datetime), by = "30 min"),
          variable = "le")
   
-  full_time <- bind_rows(full_time1, full_time2)
+  full_datetime <- bind_rows(full_datetime1, full_datetime2)
   
-  site_data_var <- left_join(full_time, site_data_var) %>% 
-    filter(month(time) == month(max_time))  ## grab all historical data for this month
+  site_data_var <- left_join(full_datetime, site_data_var) %>% 
+    filter(month(datetime) == month(max_datetime))  ## grab all historical data for this month
   
   ############ NEE  #############
   
-  #Full time series with gaps
+  #Full datetime series with gaps
   y_wgaps <- site_data_var$observed[which(site_data_var$variable == "nee")]
-  time <- c(site_data_var$time[which(site_data_var$variable == "nee")])
+  datetime <- c(site_data_var$datetime[which(site_data_var$variable == "nee")])
   #Remove gaps
-  t_nogaps <- time[!is.na(y_wgaps)]
+  t_nogaps <- datetime[!is.na(y_wgaps)]
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]
 
   ## check that we can calculate mean diurnal cycle
-  htod = hour(t_nogaps) + minute(t_nogaps)/60  ## historical time of day
+  htod = hour(t_nogaps) + minute(t_nogaps)/60  ## historical datetime of day
   nee_diurnal = tapply(y_nogaps,htod,mean)
   n_diurnal = tapply(y_nogaps,htod,length)
 #  plot(nee_diurnal,main=site_names[s])
   
   ## forecast
-  ftod = hour(fx_time) + minute(fx_time)/60
+  ftod = hour(fx_datetime) + minute(fx_datetime)/60
   for(i in 1:48){
     tod = (i-1)/2
     window = 0.25
     hindex = which(abs(htod - tod) < window) ## indices in historical data to resample
     while(length(hindex) < 10){
       window = window + 0.5
-      hindex = which(abs(htod - tod) < window) ## if no data at that time, look at adjacent times
+      hindex = which(abs(htod - tod) < window) ## if no data at that datetime, look at adjacent datetimes
       #print(window)
     }
     findex = which(ftod == tod) ## columns in fx to fill in
@@ -89,21 +89,21 @@ for(s in 1:length(site_names)){
 
   ############ Latent heat ############
   
-  #Full time series with gaps
+  #Full datetime series with gaps
   y_wgaps <- site_data_var$observed[which(site_data_var$variable == "le")]
-  time <- c(site_data_var$time[which(site_data_var$variable == "le")])
+  datetime <- c(site_data_var$datetime[which(site_data_var$variable == "le")])
   #Remove gaps
-  t_nogaps <- time[!is.na(y_wgaps)]
+  t_nogaps <- datetime[!is.na(y_wgaps)]
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]
 
-  htod = hour(t_nogaps) + minute(t_nogaps)/60  ## historical time of day
+  htod = hour(t_nogaps) + minute(t_nogaps)/60  ## historical datetime of day
   for(i in 1:48){
     tod = (i-1)/2
     window = 0.25
     hindex = which(abs(htod - tod) < window) ## indices in historical data to resample
     while(length(hindex) < 10){
       window = window + 0.5
-      hindex = which(abs(htod - tod) < window) ## if no data at that time, look at adjacent times
+      hindex = which(abs(htod - tod) < window) ## if no data at that datetime, look at adjacent datetimes
       print(window)
     }
     findex = which(ftod == tod) ## columns in fx to fill in
@@ -114,12 +114,12 @@ for(s in 1:length(site_names)){
 } ## end loop over sites
 
 ## Set dimensions
-timedim <- ncdim_def("time",   ## dimension name
-                     units = paste('seconds since',fx_time[1]),
-                     ## size of timestep, with units and start date
-                     vals = as.numeric(fx_time - fx_time[1]),
+datetimedim <- ncdim_def("datetime",   ## dimension name
+                     units = paste('seconds since',fx_datetime[1]),
+                     ## size of datetimestep, with units and start date
+                     vals = as.numeric(fx_datetime - fx_datetime[1]),
                      ## sequence of values that defines the dimension.
-                     longname = 'time')
+                     longname = 'datetime')
 ## descriptive name
 
 sitedim <- ncdim_def("site",
@@ -135,7 +135,7 @@ ensdim <- ncdim_def("ensemble",
 nchardim <- ncdim_def("nchar",units="",1:4,create_dimvar=FALSE)
 
 ## quick check that units are valid
-udunits2::ud.is.parseable(timedim$units)
+udunits2::ud.is.parseable(datetimedim$units)
 udunits2::ud.is.parseable(sitedim$units)
 udunits2::ud.is.parseable(ensdim$units)
 
@@ -145,13 +145,13 @@ fillvalue <- 1e32  ## missing data value
 def_list <- list()
 def_list[[1]] <- ncvar_def(name =  "nee",
                            units = "umol CO2 m-2 s-1",
-                           dim = list(timedim, sitedim, ensdim),
+                           dim = list(datetimedim, sitedim, ensdim),
                            missval = fillvalue,
                            longname = 'net ecosystem exchange of CO2',
                            prec="double")
 def_list[[2]] <- ncvar_def(name =  "le",
                            units = "W m-2",
-                           dim = list(timedim, sitedim, ensdim),
+                           dim = list(datetimedim, sitedim, ensdim),
                            missval = fillvalue,
                            longname = 'latent heat flux',
                            prec="double")
@@ -168,25 +168,25 @@ ncvar_put(ncout,def_list[[2]] , le_fx)
 ncvar_put(ncout,def_list[[3]] , site_names)
 
 ## Global attributes (metadata)
-curr_time <- with_tz(Sys.time(), "UTC")
-ncatt_put(ncout,0,"start_time", as.character(fx_time[1]), 
+curr_datetime <- with_tz(Sys.time(), "UTC")
+ncatt_put(ncout,0,"reference_datetime", as.character(fx_datetime[1]), 
           prec =  "text")
 
 nc_close(ncout)   ## make sure to close the file
 
 # Generate metadata
-forecast_issue_time <- as_date(curr_time)
+forecast_issue_datetime <- as_date(curr_datetime)
 forecast_iteration_id <- start_forecast
 forecast_model_id <- team_name
 
 #source("generate_metadata.R")
 #meta_data_filename <- generate_metadata(forecast_file =  ncfname,
 #                                        metadata_yaml = "metadata_30min.yml",
-#                                        forecast_issue_time = as_date(with_tz(Sys.time(), "UTC")),
+#                                        forecast_issue_datetime = as_date(with_tz(Sys.time(), "UTC")),
 #                                        forecast_iteration_id = start_forecast,
 #                                        forecast_file_name_base = strsplit(ncfname,".",fixed=TRUE)[[1]][1],
 #                                        start_time = fx_time[1],
-#                                        stop_time = last(fx_time))
+#                                        reference_datetime = last(fx_datetime))
 
 neon4cast::submit(forecast_file = ncfname, 
                   #metadata = meta_data_filename, 

@@ -51,7 +51,7 @@ site_names <- sites$field_site_id
 
 # calculates a doy average for each target variable in each site
 target_clim <- targets %>%  
-  mutate(doy = yday(time)) %>% 
+  mutate(doy = yday(datetime)) %>% 
   group_by(doy, site_id, variable) %>% 
   summarise(mean = mean(observed, na.rm = TRUE),
             sd = sd(observed, na.rm = TRUE),
@@ -75,7 +75,7 @@ forecast_doy <- yday(forecast_dates)
 forecast <- target_clim %>%
   mutate(doy = as.integer(doy)) %>% 
   filter(doy %in% forecast_doy) %>% 
-  mutate(time = as_date(ifelse(doy > last(doy),
+  mutate(datetime = as_date(ifelse(doy > last(doy),
                        as_date((doy-1), origin = paste(year(Sys.Date())+1, "01", "01", sep = "-")),
                        as_date((doy-1), origin = paste(year(Sys.Date()), "01", "01", sep = "-")))))
 
@@ -85,15 +85,15 @@ for(i in 1:length(subseted_site_names)){
   site_vector <- c(site_vector, rep(subseted_site_names[i], length(forecast_dates)))
 }
 
-forecast_tibble1 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble1 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "temperature")
 
-forecast_tibble2 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble2 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "oxygen")
 
-forecast_tibble3 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble3 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "chla")
 
@@ -102,38 +102,38 @@ forecast_tibble <- bind_rows(forecast_tibble1, forecast_tibble2, forecast_tibble
 foreast <- right_join(forecast, forecast_tibble)
 
 forecast |> 
-  ggplot(aes(x = time, y = mean)) +
+  ggplot(aes(x = datetime, y = mean)) +
   geom_point() +
   facet_grid(site_id ~ variable, scale = "free")
 
 combined <- forecast %>% 
-  select(time, site_id, variable, mean, sd) %>% 
+  select(datetime, site_id, variable, mean, sd) %>% 
   group_by(site_id, variable) %>% 
   mutate(mu = imputeTS::na_interpolation(mean),
          sigma = median(sd, na.rm = TRUE)) %>%
   pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "predicted") |> 
   mutate(family = "normal") |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::days(1)) |> 
-  select(time, start_time, site_id, variable, family, parameter, predicted)
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1)) |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted)
 
 combined |> 
   filter(parameter == "mu") |> 
-  ggplot(aes(x = time, y = predicted)) +
+  ggplot(aes(x = datetime, y = predicted)) +
   geom_point() +
   facet_grid(site_id ~ variable, scale = "free")
   
   
 # plot the forecasts
 combined %>% 
-  select(time, predicted ,parameter, variable, site_id) %>% 
+  select(datetime, predicted ,parameter, variable, site_id) %>% 
   pivot_wider(names_from = parameter, values_from = predicted) %>% 
-  ggplot(aes(x = time)) +
+  ggplot(aes(x = datetime)) +
   geom_ribbon(aes(ymin=mu - sigma*1.96, ymax=mu + sigma*1.96), alpha = 0.1) + 
   geom_line(aes(y = mu)) +
   facet_grid(variable~site_id, scales = "free") +
   theme_bw()
 
-forecast_file <- paste("aquatics", min(combined$time), "climatology.csv.gz", sep = "-")
+forecast_file <- paste("aquatics", min(combined$datetime), "climatology.csv.gz", sep = "-")
 
 write_csv(combined, forecast_file)
 

@@ -16,12 +16,12 @@ curr_date <- ISOweek::ISOweek2date(paste0(curr_iso_week, "-1"))
 site_list <- unique(targets$site_id)
 
 last_day_richness <- tibble(site_id = site_list,
-                   time = rep(curr_date, length(site_list)),
+                   datetime = rep(curr_date, length(site_list)),
                    variable = "richness",
                    observed = NA)
 
 last_day_abundance <- tibble(site_id = site_list,
-                            time = rep(curr_date, length(site_list)),
+                            datetime = rep(curr_date, length(site_list)),
                             variable = "abundance",
                             observed = NA)
 
@@ -30,14 +30,14 @@ targets_richness <- targets |>
   bind_rows(last_day_richness) |> 
   rename(richness = observed) |> 
   select(-variable) |> 
-  as_tsibble(index = time, key = site_id)
+  as_tsibble(index = datetime, key = site_id)
 
 targets_abundance <- targets |> 
   filter(variable == "abundance") |> 
   bind_rows(last_day_abundance) |> 
   rename(abundance = observed) |> 
   select(-variable) |> 
-  as_tsibble(index = time, key = site_id)
+  as_tsibble(index = datetime, key = site_id)
 
 ## a single mean per site... obviously silly
 fc_richness <- targets_richness  %>% 
@@ -50,32 +50,33 @@ fc_richness <- targets_richness  %>%
 fc_abundance <- targets_abundance  %>%
   model(null = MEAN(log(abundance + 1))) %>%
   generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
-  dplyr::rename(ensemble = .rep,
+  dplyr::rename(parameter = .rep,
                 predicted = .sim) |> 
-  mutate(variable = "abundance")
+  mutate(variable = "abundance",
+         family = "ensemble")
 
 fc_richness |> 
   filter(site_id %in% site_list[1:10], variable == "richness") |> 
-  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+  ggplot(aes(x = datetime, y = predicted, group = ensemble)) +
   geom_line() +
   facet_wrap(~site_id)
 
 targets |> 
   filter(site_id %in% site_list[1:10], variable == "richness") |> 
-  ggplot(aes(x = time, y = observed)) +
+  ggplot(aes(x = datetime, y = observed)) +
   geom_point() +
   facet_wrap(~site_id)
 
 
 forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::weeks(1)) |> 
-  select(time, start_time, site_id, ensemble, variable, predicted)
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1)) |> 
+  select(datetime, reference_datetime, site_id, family, parameter, variable, predicted)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "beetles"
-time <- min(forecast$time)
+datetime <- min(forecast$datetime)
 team_name <- "mean"
-filename <- paste0(theme_name, "-", time, "-", team_name, ".csv.gz")
+filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 ## Store the forecast products
 readr::write_csv(forecast, filename)

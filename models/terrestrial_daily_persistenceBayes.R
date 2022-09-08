@@ -115,30 +115,30 @@ for(s in 1:length(site_names)){
   site_data_var <- terrestrial_targets %>%
     filter(variable == "nee") |> 
     filter(site_id == site_names[s], 
-           time >= lubridate::as_date("2020-01-01")) 
+           datetime >= lubridate::as_date("2020-01-01")) 
   
   # Find the last day in the observed data and add one day for the start of the 
   # forecast
-  start_forecast <- max(site_data_var$time) + days(1)
+  start_forecast <- max(site_data_var$datetime) + days(1)
   
   # This is key here - I added 35 days on the end of the data for the forecast period
-  full_time <- tibble(time = seq(min(site_data_var$time), max(site_data_var$time) + days(35), by = "1 day"))
+  full_datetime <- tibble(datetime = seq(min(site_data_var$datetime), max(site_data_var$datetime) + days(35), by = "1 day"))
   
-  # Join the full time with the site_data_var so there aren't gaps in the time column
-  site_data_var <- left_join(full_time, site_data_var)
+  # Join the full datetime with the site_data_var so there aren't gaps in the datetime column
+  site_data_var <- left_join(full_datetime, site_data_var)
   
-  #observed NEE: Full time series with gaps
+  #observed NEE: Full datetime series with gaps
   y_wgaps <- site_data_var$observed
-  time <- c(site_data_var$time)
-  #observed NEE: time series without gaps
+  datetime <- c(site_data_var$datetime)
+  #observed NEE: datetime series without gaps
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]
-  #Index: time series with gaps
+  #Index: datetime series with gaps
   y_wgaps_index <- 1:length(y_wgaps)
-  #Index: the index of the non-NA values in time series with gaps
+  #Index: the index of the non-NA values in datetime series with gaps
   y_wgaps_index <- y_wgaps_index[!is.na(y_wgaps)]
   
   #Generate starting initial conditions for latent states
-  init_x <- approx(x = time[!is.na(y_wgaps)], y = y_nogaps, xout = time, rule = 2)$y
+  init_x <- approx(x = datetime[!is.na(y_wgaps)], y = y_nogaps, xout = datetime, rule = 2)$y
   
   #Create a list of the data for use in JAGS.  Include vector lengths (nobs, n)
   data <- list(y = y_wgaps,
@@ -177,26 +177,26 @@ for(s in 1:length(site_names)){
     spread_draws(y[day]) %>%
     filter(.chain == 1) %>%
     rename(ensemble = .iteration) %>%
-    mutate(time = full_time$time[day]) %>%
+    mutate(datetime = full_datetime$datetime[day]) %>%
     ungroup() %>%
-    select(time, y, ensemble)
+    select(datetime, y, ensemble)
   
   if(generate_plots){
     #Pull in the observed data for plotting
-    obs <- tibble(time = full_time$time,
+    obs <- tibble(datetime = full_datetime$datetime,
                   obs = y_wgaps)
     
     
     #Post past and future
     model_output %>% 
-      group_by(time) %>% 
+      group_by(datetime) %>% 
       summarise(mean = mean(y),
                 upper = quantile(y, 0.975),
                 lower = quantile(y, 0.025),.groups = "drop") %>% 
-      ggplot(aes(x = time, y = mean)) +
+      ggplot(aes(x = datetime, y = mean)) +
       geom_line() +
       geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2, color = "lightblue", fill = "lightblue") +
-      geom_point(data = obs, aes(x = time, y = obs), color = "red") +
+      geom_point(data = obs, aes(x = datetime, y = obs), color = "red") +
       labs(x = "Date", y = "nee")
     
     ggsave(paste0("nee_daily_",site_names[s],"_figure.pdf"), device = "pdf")
@@ -204,7 +204,7 @@ for(s in 1:length(site_names)){
   
   #Filter only the forecasted dates and add columns for required variable
   forecast_saved_tmp <- model_output %>%
-    filter(time >= start_forecast) %>%
+    filter(datetime >= start_forecast) %>%
     rename(predicted = y) %>% 
     mutate(variable = "nee",
            site_id = site_names[s]) %>%
@@ -231,7 +231,7 @@ for(s in 1:length(site_names)){
   site_data_var <- terrestrial_targets %>%
     filter(variable == "le") |> 
     filter(site_id == site_names[s], 
-           time >= lubridate::as_date("2020-01-01"))
+           datetime >= lubridate::as_date("2020-01-01"))
     
     #site_sd <- variable_sd |> 
     #  filter(site_id == site_names[s],
@@ -239,15 +239,15 @@ for(s in 1:length(site_names)){
     #  pull(sd)
     
   
-  max_time <- max(site_data_var$time) + days(1)
+  max_datetime <- max(site_data_var$datetime) + days(1)
   
-  start_forecast <- max_time
-  full_time <- tibble(time = seq(min(site_data_var$time), max(site_data_var$time) + days(35), by = "1 day"))
+  start_forecast <- max_datetime
+  full_datetime <- tibble(datetime = seq(min(site_data_var$datetime), max(site_data_var$datetime) + days(35), by = "1 day"))
   
-  site_data_var <- left_join(full_time, site_data_var)
+  site_data_var <- left_join(full_datetime, site_data_var)
   
   y_wgaps <- site_data_var$observed
-  time <- c(site_data_var$time)
+  datetime <- c(site_data_var$datetime)
   
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]
   
@@ -255,7 +255,7 @@ for(s in 1:length(site_names)){
   
   y_wgaps_index <- y_wgaps_index[!is.na(y_wgaps)]
   
-  init_x <- approx(x = time[!is.na(y_wgaps)], y = y_nogaps, xout = time, rule = 2)$y
+  init_x <- approx(x = datetime[!is.na(y_wgaps)], y = y_nogaps, xout = datetime, rule = 2)$y
   
   data <- list(y = y_wgaps,
                tau_obs = 1/(0.1 ^ 2),
@@ -288,30 +288,30 @@ for(s in 1:length(site_names)){
     spread_draws(y[day]) %>%
     filter(.chain == 1) %>%
     rename(ensemble = .iteration) %>%
-    mutate(time = full_time$time[day]) %>%
+    mutate(datetime = full_datetime$datetime[day]) %>%
     ungroup() %>%
-    select(time, y, ensemble)
+    select(datetime, y, ensemble)
   
   if(generate_plots){
-    obs <- tibble(time = full_time$time,
+    obs <- tibble(datetime = full_datetime$datetime,
                   obs = y_wgaps)
     
     model_output %>% 
-      group_by(time) %>% 
+      group_by(datetime) %>% 
       summarise(mean = mean(y),
                 upper = quantile(y, 0.975),
                 lower = quantile(y, 0.025),.groups = "drop") %>% 
-      ggplot(aes(x = time, y = mean)) +
+      ggplot(aes(x = datetime, y = mean)) +
       geom_line() +
       geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2, color = "lightblue", fill = "lightblue") +
-      geom_point(data = obs, aes(x = time, y = obs), color = "red") +
+      geom_point(data = obs, aes(x = datetime, y = obs), color = "red") +
       labs(x = "Date", y = "le")
     
     ggsave(paste0("le_daily_",site_names[s],"_figure.pdf"), device = "pdf")
   }
   
   forecast_saved_tmp <- model_output %>%
-    filter(time >= start_forecast) %>%
+    filter(datetime >= start_forecast) %>%
     rename(predicted = y) %>% 
     mutate(variable = "le",
            site_id = site_names[s]) %>%
@@ -324,7 +324,9 @@ for(s in 1:length(site_names)){
 
 #'Combined the NEE and LE forecasts together and re-order column
 forecast_saved <- bind_rows(forecast_saved_nee, forecast_saved_le) %>% 
-  select(time, site_id, ensemble, variable, predicted)
+  rename(parameter = ensemble) |> 
+  mutate(family = "ensemble")
+  select(datetime, site_id, family, parameter, variable, predicted)
 
 #'Save file as CSV in the
 #'[theme_name]-[year]-[month]-[date]-[team_name].csv
@@ -334,8 +336,8 @@ write_csv(forecast_saved, forecast_file)
 
 #'#Generate metadata
 
-#'Get system time for setting the issue time of the forecast
-curr_time <- with_tz(Sys.time(), "UTC")
+#'Get system datetime for setting the issue datetime of the forecast
+curr_datetime <- with_tz(Sys.time(), "UTC")
 #forecast_issue_time <- format(curr_time,format = "%Y-%m-%d %H:%M:%SZ", usetz = F)
 forecast_issue_time <- as_date(curr_time)
 forecast_iteration_id <- start_forecast

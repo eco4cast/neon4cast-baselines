@@ -9,7 +9,7 @@ download_url <- paste0("https://data.ecoforecast.org/neon4cast-targets/",
 target <- read_csv(download_url)
 
 target_clim <- target %>%  
-  mutate(doy = yday(time)) %>% 
+  mutate(doy = yday(datetime)) %>% 
   group_by(doy, site_id, variable) %>% 
   summarise(mean = mean(observed, na.rm = TRUE),
             sd = sd(observed, na.rm = TRUE),
@@ -31,7 +31,7 @@ forecast_doy <- yday(forecast_dates)
 forecast <- target_clim %>%
   mutate(doy = as.integer(doy)) %>% 
   filter(doy %in% forecast_doy) %>% 
-  mutate(time = as_date(ifelse(doy > last(doy),
+  mutate(datetime = as_date(ifelse(doy > last(doy),
                                as_date((doy-1), origin = paste(year(Sys.Date())+1, "01", "01", sep = "-")),
                                as_date((doy-1), origin = paste(year(Sys.Date()), "01", "01", sep = "-")))))
 
@@ -41,11 +41,11 @@ for(i in 1:length(subseted_site_names)){
   site_vector <- c(site_vector, rep(subseted_site_names[i], length(forecast_dates)))
 }
 
-forecast_tibble1 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble1 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "gcc_90")
 
-forecast_tibble2 <- tibble(time = rep(forecast_dates, length(subseted_site_names)),
+forecast_tibble2 <- tibble(datetime = rep(forecast_dates, length(subseted_site_names)),
                           site_id = site_vector,
                           variable = "rcc_90")
 
@@ -56,27 +56,27 @@ forecast <- left_join(forecast_tibble, forecast)
 
 
 combined <- forecast %>% 
-  select(time, site_id, mean, sd, variable) %>% 
+  select(datetime, site_id, mean, sd, variable) %>% 
   group_by(site_id, variable) %>% 
   mutate(mu = imputeTS::na_interpolation(mean),
          sigma = median(sd, na.rm = TRUE)) %>%
   pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "predicted") |> 
-  arrange(site_id, time) |> 
+  arrange(site_id, datetime) |> 
   mutate(family = "normal") |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::days(1)) |> 
-  select(time, start_time, site_id, variable, family, parameter, predicted) |> 
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1)) |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
   ungroup()
 
 combined %>% 
   filter(variable == "gcc_90") |> 
-  select(time, site_id,parameter, predicted) %>% 
+  select(datetime, site_id,parameter, predicted) %>% 
   pivot_wider(names_from = parameter, values_from = predicted) %>% 
-  ggplot(aes(x = time)) +
+  ggplot(aes(x = datetime)) +
   geom_ribbon(aes(ymin=mu - sigma*1.96, ymax=mu + sigma*1.96), alpha = 0.1) + 
   geom_point(aes(y = mu)) +
   facet_wrap(~site_id)
 
-forecast_file <- paste("phenology", min(combined$time), "climatology.csv.gz", sep = "-")
+forecast_file <- paste("phenology", min(combined$datetime), "climatology.csv.gz", sep = "-")
 
 write_csv(combined, file = forecast_file)
 

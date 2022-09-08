@@ -56,12 +56,12 @@ for(i in 1:length(target_variables)){
     forecast_length <- 35
     
     sitePhenoDat <- phenoDat[phenoDat$site_id==sites[s],]
-    sitePhenoDat$time <- lubridate::as_date(sitePhenoDat$time)
+    sitePhenoDat$datetime <- lubridate::as_date(sitePhenoDat$datetime)
     
     #sitePhenoDat <- sitePhenoDat %>% 
     #  pivot_longer(cols = c(all_of(target_variables), all_of(target_variables_sd)), names_to = "variable", values_to = "values")
     
-    #start_forecast <- max(sitePhenoDat$time) + lubridate::days(1)
+    #start_forecast <- max(sitePhenoDat$datetime) + lubridate::days(1)
     start_forecast <- Sys.Date() + lubridate::days(1)
     
     sitePhenoDat_variable <- sitePhenoDat %>% 
@@ -69,16 +69,16 @@ for(i in 1:length(target_variables)){
     
     sitePhenoDat_sd <- sitePhenoDat %>% 
       filter(variable == target_variables_sd[i])
-    #full_time <- tibble::tibble(time = seq(min(sitePhenoDat$time), max(sitePhenoDat$time) + lubridate::days(forecast_length), by = "1 day"))
-    full_time <- tibble::tibble(time = seq(min(sitePhenoDat$time), Sys.Date()  + lubridate::days(forecast_length), by = "1 day"))
-    forecast_start_index <- which(full_time$time == max(sitePhenoDat$time) + lubridate::days(1))
+    #full_datetime <- tibble::tibble(datetime = seq(min(sitePhenoDat$datetime), max(sitePhenoDat$datetime) + lubridate::days(forecast_length), by = "1 day"))
+    full_datetime <- tibble::tibble(datetime = seq(min(sitePhenoDat$datetime), Sys.Date()  + lubridate::days(forecast_length), by = "1 day"))
+    forecast_start_index <- which(full_datetime$datetime == max(sitePhenoDat$datetime) + lubridate::days(1))
    
-     d <- tibble::tibble(time = sitePhenoDat_variable$time,
+     d <- tibble::tibble(datetime = sitePhenoDat_variable$datetime,
                         p=as.numeric(sitePhenoDat_variable$observed),
                         p.sd=as.numeric(sitePhenoDat_variable$sd))
-    d <- dplyr::full_join(d, full_time)
+    d <- dplyr::full_join(d, full_datetime)
     
-    ggplot(d, aes(x = time, y = p)) +
+    ggplot(d, aes(x = datetime, y = p)) +
       geom_point()
     
     #gap fill the missing precisions by assigning them the average sd for the site
@@ -91,7 +91,7 @@ for(i in 1:length(target_variables)){
                  N = length(d$p),
                  x_ic = 0.3)
     
-    init_x <- approx(x = d$time[!is.na(d$p)], y = d$p[!is.na(d$p)], xout = d$time, rule = 2)$y
+    init_x <- approx(x = d$datetime[!is.na(d$p)], y = d$p[!is.na(d$p)], xout = d$datetime, rule = 2)$y
     
     #Initialize parameters
     nchain = 3
@@ -126,27 +126,27 @@ for(i in 1:length(target_variables)){
       spread_draws(y[day]) %>%
       filter(.chain == 1) %>%
       rename(ensemble = .iteration) %>%
-      mutate(time = full_time$time[day]) %>%
+      mutate(datetime = full_datetime$datetime[day]) %>%
       ungroup() %>%
-      select(time, y, ensemble)
+      select(datetime, y, ensemble)
     
     if(generate_plots){
       #Pull in the observed data for plotting
-      obs <- tibble(time = d$time,
+      obs <- tibble(datetime = d$datetime,
                     obs = d$p) %>% 
-        filter(time >= max(sitePhenoDat$time))
+        filter(datetime >= max(sitePhenoDat$datetime))
       
       #Post past and future
       model_output %>%
-        group_by(time) %>%
+        group_by(datetime) %>%
         summarise(mean = mean(y),
                   upper = quantile(y, 0.975),
                   lower = quantile(y, 0.025),.groups = "drop") %>%
-        filter(time >= max(sitePhenoDat$time) ) %>%
-        ggplot(aes(x = time, y = mean)) +
+        filter(datetime >= max(sitePhenoDat$datetime) ) %>%
+        ggplot(aes(x = datetime, y = mean)) +
         geom_line() +
         geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2, color = "lightblue", fill = "lightblue") +
-        geom_point(data = obs, aes(x = time, y = obs), color = "red") +
+        geom_point(data = obs, aes(x = datetime, y = obs), color = "red") +
         labs(x = "Date", y = "gcc_90")
       
       ggsave(paste0("phenology_",sites[s],"_figure.pdf"), device = "pdf")
@@ -154,7 +154,7 @@ for(i in 1:length(target_variables)){
     
     #Filter only the forecasted dates and add columns for required variable
     forecast_saved_tmp <- model_output %>%
-      filter(time >= start_forecast) %>%
+      filter(datetime >= start_forecast) %>%
       rename(predicted = y) %>%
       mutate(site_id = sites[s]) %>%
       mutate(forecast_iteration_id = start_forecast) %>%
@@ -168,11 +168,13 @@ for(i in 1:length(target_variables)){
   }
 }
 
-forecast_file_name <- paste0("phenology-",lubridate::as_date(min(forecast_saved$time)),"-",team_name,".csv.gz")
+forecast_file_name <- paste0("phenology-",lubridate::as_date(min(forecast_saved$datetime)),"-",team_name,".csv.gz")
 
 forecast_saved <- forecast_saved |> 
-  mutate(start_time = lubridate::as_date(min(time)) - lubridate::days(1)) |> 
-  select(time, start_time, site_id, variable, ensemble, predicted)
+  mutate(start_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1)) |> 
+  rename(parameter = ensemble) |> 
+  mutate(family = "ensemble") |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
 
 write_csv(forecast_saved, forecast_file_name)
 
