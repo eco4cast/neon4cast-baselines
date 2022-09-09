@@ -35,7 +35,7 @@ RW_forecasts_EFI <- RW_forecasts %>%
   group_by(site_id, variable) %>%
   mutate(reference_datetime = min(datetime) - lubridate::days(1),
          family = "ensemble") %>%
-  select(datetime, reference_datetime, site_id, ensemble, variable, predicted)  
+  select(datetime, reference_datetime, site_id, family, parameter, variable, predicted)  
 
 #RW_forecasts_EFI |> 
 #  filter(variable == "gcc_90") |> 
