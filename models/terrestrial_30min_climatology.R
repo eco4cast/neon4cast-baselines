@@ -127,7 +127,7 @@ sitedim <- ncdim_def("site",
                      vals=1:length(site_names),
                      longname = "NEON siteID")
 
-ensdim <- ncdim_def("ensemble",             
+ensdim <- ncdim_def("parameter",             
                     units = "",
                     vals = seq_len(ne),       
                     longname = 'ensemble member') 
