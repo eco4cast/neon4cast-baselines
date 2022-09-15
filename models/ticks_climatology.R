@@ -98,8 +98,9 @@ forecast.submit <- ensembles %>%
          parameter = ensemble) |> 
   mutate(variable = "amblyomma_americanum",
          family = "ensemble") |> 
-  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1)) |> 
-  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
+         model_id = team_name) |> 
+  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
   arrange(site_id, datetime)
 
 ggplot(forecast.submit, aes(x = datetime, y = predicted)) +

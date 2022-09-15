@@ -47,8 +47,9 @@ forecast <- targets  %>%
   dplyr::rename(ensemble = .rep,
                 predicted = .sim) |> 
   mutate(variable = "amblyomma_americanum") |> 
-  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1)) |> 
-  select(datetime, reference_datetime, site_id, ensemble, variable, predicted)
+  mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
+         model_id = team_name) |> 
+  select(model_id, datetime, reference_datetime, site_id, ensemble, variable, predicted)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "ticks"

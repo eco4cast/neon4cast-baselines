@@ -325,8 +325,9 @@ for(s in 1:length(site_names)){
 #'Combined the NEE and LE forecasts together and re-order column
 forecast_saved <- bind_rows(forecast_saved_nee, forecast_saved_le) %>% 
   rename(parameter = ensemble) |> 
-  mutate(family = "ensemble")
-  select(datetime, site_id, family, parameter, variable, predicted)
+  mutate(family = "ensemble",
+         model_id = team_name) |> 
+  select(model_id, datetime, site_id, family, parameter, variable, predicted)
 
 #'Save file as CSV in the
 #'[theme_name]-[year]-[month]-[date]-[team_name].csv

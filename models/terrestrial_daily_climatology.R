@@ -114,8 +114,9 @@ combined <- forecast %>%
 combined <- combined %>%
   pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "predicted") |> 
   mutate(family = "normal") |> 
-  mutate(reference_datetime = min(combined$datetime) - lubridate::days(1)) |> 
-  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted)
+  mutate(reference_datetime = min(combined$datetime) - lubridate::days(1),
+         model_id = "climatology") |> 
+  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, predicted)
 
 combined %>% 
   filter(variable == "nee") |> 

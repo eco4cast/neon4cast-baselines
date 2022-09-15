@@ -171,6 +171,8 @@ ncvar_put(ncout,def_list[[3]] , site_names)
 curr_datetime <- with_tz(Sys.time(), "UTC")
 ncatt_put(ncout,0,"reference_datetime", as.character(fx_datetime[1]), 
           prec =  "text")
+ncatt_put(ncout,0,"model_id",team_name, prec =  "text")
+
 
 nc_close(ncout)   ## make sure to close the file
 

@@ -35,8 +35,9 @@ RW_forecasts_EFI <- RW_forecasts %>%
   filter(datetime > Sys.Date()) %>%
   group_by(site_id, variable) %>%
   mutate(reference_datetime = min(datetime) - lubridate::days(1),
-         family = "ensemble") %>%
-  select(datetime, reference_datetime, site_id, family, parameter, variable, predicted) 
+         family = "ensemble",
+         model_id = "persistenceRW") %>%
+  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, predicted) 
 
 #RW_forecasts_EFI |> 
 #  filter(site_id %in% unique(RW_forecasts_EFI$site_id)[1:24]) |> 
