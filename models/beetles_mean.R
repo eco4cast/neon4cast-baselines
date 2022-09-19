@@ -67,6 +67,7 @@ targets |>
   geom_point() +
   facet_wrap(~site_id)
 
+team_name <- "mean"
 
 forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
@@ -76,7 +77,6 @@ forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |>
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "beetles"
 datetime <- min(forecast$datetime)
-team_name <- "mean"
 filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 ## Store the forecast products

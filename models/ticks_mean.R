@@ -40,6 +40,8 @@ targets <- targets |>
   select(-variable) |> 
   as_tsibble(index = datetime, key = site_id)
 
+team_name <- "mean"
+
 ## a single mean per site... obviously silly
 forecast <- targets  %>% 
   model(null = MEAN(log(observed + 1))) %>%
@@ -54,7 +56,6 @@ forecast <- targets  %>%
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "ticks"
 datetime <- min(forecast$datetime)
-team_name <- "mean"
 filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 ## Store the forecast products
