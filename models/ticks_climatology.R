@@ -91,6 +91,8 @@ forecast <- hist_means(data, fx.datetime)
 # generate ensembles for uncertainty and scoring
 ensembles <- create_ensembles(forecast, curr_iso_week, curr_year)
 
+team_name <- "EFI_avg_null"
+
 # finalize for EFI submission
 forecast.submit <- ensembles %>% 
   select(-year, -iso_week) %>% 
@@ -115,7 +117,6 @@ ggplot(data, aes(x = datetime, y = observed)) +
 # [theme_name]-[time]-[team_name].csv
 theme_name <- "ticks"
 datetime <- as.character(min(forecast.submit$datetime))
-team_name <- "EFI_avg_null"
 file.name <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
 
 write_csv(forecast.submit, file.name)
