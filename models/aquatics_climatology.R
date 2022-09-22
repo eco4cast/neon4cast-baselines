@@ -115,7 +115,7 @@ combined <- forecast %>%
   mutate(family = "normal") |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1),
          model_id = "climatology") |> 
-  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, predicted)
+  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, predicted)
 
 combined |> 
   filter(parameter == "mu") |> 
