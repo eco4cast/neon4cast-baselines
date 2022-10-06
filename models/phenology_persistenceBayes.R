@@ -155,7 +155,7 @@ for(i in 1:length(target_variables)){
     #Filter only the forecasted dates and add columns for required variable
     forecast_saved_tmp <- model_output %>%
       filter(datetime >= start_forecast) %>%
-      rename(predicted = y) %>%
+      rename(prediction = y) %>%
       mutate(site_id = sites[s]) %>%
       mutate(forecast_iteration_id = start_forecast) %>%
       mutate(forecast_project_id = team_name,
@@ -174,7 +174,7 @@ forecast_saved <- forecast_saved |>
   mutate(start_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1)) |> 
   rename(parameter = ensemble) |> 
   mutate(family = "ensemble") |> 
-  select(datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
+  select(datetime, reference_datetime, site_id, variable, family, parameter, prediction) |> 
 
 write_csv(forecast_saved, forecast_file_name)
 

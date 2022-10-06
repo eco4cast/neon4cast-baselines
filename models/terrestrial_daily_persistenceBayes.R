@@ -205,7 +205,7 @@ for(s in 1:length(site_names)){
   #Filter only the forecasted dates and add columns for required variable
   forecast_saved_tmp <- model_output %>%
     filter(datetime >= start_forecast) %>%
-    rename(predicted = y) %>% 
+    rename(prediction = y) %>% 
     mutate(variable = "nee",
            site_id = site_names[s]) %>%
     mutate(forecast_iteration_id = start_forecast) %>%
@@ -312,7 +312,7 @@ for(s in 1:length(site_names)){
   
   forecast_saved_tmp <- model_output %>%
     filter(datetime >= start_forecast) %>%
-    rename(predicted = y) %>% 
+    rename(prediction = y) %>% 
     mutate(variable = "le",
            site_id = site_names[s]) %>%
     mutate(forecast_iteration_id = start_forecast) %>%
@@ -327,7 +327,7 @@ forecast_saved <- bind_rows(forecast_saved_nee, forecast_saved_le) %>%
   rename(parameter = ensemble) |> 
   mutate(family = "ensemble",
          model_id = team_name) |> 
-  select(model_id, datetime, site_id, family, parameter, variable, predicted)
+  select(model_id, datetime, site_id, family, parameter, variable, prediction)
 
 #'Save file as CSV in the
 #'[theme_name]-[year]-[month]-[date]-[team_name].csv

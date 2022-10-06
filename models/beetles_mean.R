@@ -44,20 +44,20 @@ fc_richness <- targets_richness  %>%
   model(null = MEAN(log(richness + 1))) %>%
   generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
   dplyr::rename(ensemble = .rep,
-                predicted = .sim) |> 
+                prediction = .sim) |> 
   mutate(variable = "richness")
 
 fc_abundance <- targets_abundance  %>%
   model(null = MEAN(log(abundance + 1))) %>%
   generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
   dplyr::rename(parameter = .rep,
-                predicted = .sim) |> 
+                prediction = .sim) |> 
   mutate(variable = "abundance",
          family = "ensemble")
 
 fc_richness |> 
   filter(site_id %in% site_list[1:10], variable == "richness") |> 
-  ggplot(aes(x = datetime, y = predicted, group = ensemble)) +
+  ggplot(aes(x = datetime, y = prediction, group = ensemble)) +
   geom_line() +
   facet_wrap(~site_id)
 
@@ -72,7 +72,7 @@ team_name <- "mean"
 forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
          model_id = team_name) |> 
-  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, predicted)
+  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, prediction)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "beetles"

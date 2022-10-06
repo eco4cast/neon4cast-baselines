@@ -60,18 +60,18 @@ combined <- forecast %>%
   group_by(site_id, variable) %>% 
   mutate(mu = imputeTS::na_interpolation(mean),
          sigma = median(sd, na.rm = TRUE)) %>%
-  pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "predicted") |> 
+  pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "prediction") |> 
   arrange(site_id, datetime) |> 
   mutate(family = "normal") |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::days(1),
          model_id = "climatology") |> 
-  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
+  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, prediction) |> 
   ungroup()
 
 combined %>% 
   filter(variable == "gcc_90") |> 
-  select(datetime, site_id,parameter, predicted) %>% 
-  pivot_wider(names_from = parameter, values_from = predicted) %>% 
+  select(datetime, site_id,parameter, prediction) %>% 
+  pivot_wider(names_from = parameter, values_from = prediction) %>% 
   ggplot(aes(x = datetime)) +
   geom_ribbon(aes(ymin=mu - sigma*1.96, ymax=mu + sigma*1.96), alpha = 0.1) + 
   geom_point(aes(y = mu)) +

@@ -30,18 +30,18 @@ RW_forecasts <- purrr::pmap_dfr(site_var_combinations, RW_daily_forecast)
 # convert the output into EFI standard
 RW_forecasts_EFI <- RW_forecasts %>%
   rename(parameter = .rep,
-         predicted = .sim) %>%
+         prediction = .sim) %>%
   # For the EFI challenge we only want the forecast for future
   filter(datetime > Sys.Date()) %>%
   group_by(site_id, variable) %>%
   mutate(reference_datetime = min(datetime) - lubridate::days(1),
          family = "ensemble",
          model_id = "persistenceRW") %>%
-  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, predicted) 
+  select(model_id, datetime, reference_datetime, site_id, family, parameter, variable, prediction) 
 
 #RW_forecasts_EFI |> 
 #  filter(site_id %in% unique(RW_forecasts_EFI$site_id)[1:24]) |> 
-#  ggplot(aes(x = time, y = predicted, group = ensemble)) +
+#  ggplot(aes(x = time, y = prediction, group = ensemble)) +
 #  geom_line() +
 #  facet_wrap(~site_id)
 

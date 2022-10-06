@@ -96,16 +96,16 @@ team_name <- "EFI_avg_null"
 # finalize for EFI submission
 forecast.submit <- ensembles %>% 
   select(-year, -iso_week) %>% 
-  rename(predicted = density,
+  rename(prediction = density,
          parameter = ensemble) |> 
   mutate(variable = "amblyomma_americanum",
          family = "ensemble") |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
          model_id = team_name) |> 
-  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, predicted) |> 
+  select(model_id, datetime, reference_datetime, site_id, variable, family, parameter, prediction) |> 
   arrange(site_id, datetime)
 
-ggplot(forecast.submit, aes(x = datetime, y = predicted)) +
+ggplot(forecast.submit, aes(x = datetime, y = prediction)) +
   geom_point() +
   facet_wrap(~site_id)
 

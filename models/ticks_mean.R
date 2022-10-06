@@ -12,7 +12,7 @@ efi_statistic_format <- function(df){
     dplyr::rename(mu = .mean) %>%
     dplyr::select(datetime, site_id, .model, mu, sigma) %>%
     tidyr::pivot_longer(c(mu, sigma), names_to = "parameter", values_to = var) %>%
-    pivot_longer(tidyselect::all_of(var), names_to="variable", values_to = "predicted") |> 
+    pivot_longer(tidyselect::all_of(var), names_to="variable", values_to = "prediction") |> 
     mutate(family = "normal")
 }
 
@@ -47,11 +47,11 @@ forecast <- targets  %>%
   model(null = MEAN(log(observed + 1))) %>%
   generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
   dplyr::rename(ensemble = .rep,
-                predicted = .sim) |> 
+                prediction = .sim) |> 
   mutate(variable = "amblyomma_americanum") |> 
   mutate(reference_datetime = lubridate::as_date(min(datetime)) - lubridate::weeks(1),
          model_id = team_name) |> 
-  select(model_id, datetime, reference_datetime, site_id, ensemble, variable, predicted)
+  select(model_id, datetime, reference_datetime, site_id, ensemble, variable, prediction)
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "ticks"
