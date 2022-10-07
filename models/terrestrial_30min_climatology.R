@@ -30,6 +30,8 @@ site_names <- read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-tar
 start_forecast <- as.POSIXct(Sys.Date(),tz="UTC")
 fx_datetime <- seq(start_forecast, start_forecast + days(35), by = "30 min")
 
+reference_datetime <- strftime(lubridate::as_datetime(start_forecast),format= "%Y-%m-%d %H:%M:%S")
+
 nee_fx = le_fx = array(NA, dim=c(length(fx_datetime),length(site_names),ne)) ## dimensions: datetime, space, ensemble
 
 ## Forecast by site
@@ -161,7 +163,7 @@ def_list[[3]] <- ncvar_def(name = "site_id",
                            longname = "NEON site codes",
                            prec="char")
 
-ncfname <- paste0("terrestrial_30min-",as_date(fx_datetime[1]),"-",team_name,".nc")
+ncfname <- paste0("terrestrial_30min-",reference_datetime,"-",team_name,".nc")
 ncout <- nc_create(ncfname,def_list,force_v4=T)
 ncvar_put(ncout,def_list[[1]] , nee_fx)
 ncvar_put(ncout,def_list[[2]] , le_fx)
@@ -169,7 +171,7 @@ ncvar_put(ncout,def_list[[3]] , site_names)
 
 ## Global attributes (metadata)
 curr_datetime <- with_tz(Sys.time(), "UTC")
-ncatt_put(ncout,0,"reference_datetime", as.character(fx_datetime[1]), 
+ncatt_put(ncout,0,"reference_datetime", reference_datetime, 
           prec =  "text")
 ncatt_put(ncout,0,"model_id",team_name, prec =  "text")
 
