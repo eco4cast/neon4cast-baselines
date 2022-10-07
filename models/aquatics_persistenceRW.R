@@ -45,8 +45,13 @@ RW_forecasts_EFI <- RW_forecasts %>%
 #  geom_line() +
 #  facet_wrap(~site_id)
 
+
+
 # 4. Write forecast file
-forecast_file <- paste("aquatics", min(RW_forecasts_EFI$datetime), "persistenceRW.csv.gz", sep = "-")
+
+file_date <- RW_forecasts_EFI$reference_datetime[1]
+
+forecast_file <- paste("aquatics", file_date, "persistenceRW.csv.gz", sep = "-")
 
 RW_forecasts_EFI <- RW_forecasts_EFI |> 
   filter(variable != "ch")

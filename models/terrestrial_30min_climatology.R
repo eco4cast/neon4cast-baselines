@@ -161,7 +161,7 @@ def_list[[3]] <- ncvar_def(name = "site_id",
                            longname = "NEON site codes",
                            prec="char")
 
-ncfname <- paste0("terrestrial_30min-",as_date(start_forecast),"-",team_name,".nc")
+ncfname <- paste0("terrestrial_30min-",as_date(fx_datetime[1]),"-",team_name,".nc")
 ncout <- nc_create(ncfname,def_list,force_v4=T)
 ncvar_put(ncout,def_list[[1]] , nee_fx)
 ncvar_put(ncout,def_list[[2]] , le_fx)

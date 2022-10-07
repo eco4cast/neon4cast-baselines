@@ -46,7 +46,9 @@ RW_forecasts_EFI <- RW_forecasts %>%
 #  facet_wrap(~site_id)
 
 # 4. Write forecast file
-forecast_file <- paste("terrestrial_daily", min(RW_forecasts_EFI$datetime), "persistenceRW.csv.gz", sep = "-")
+file_date <- RW_forecasts_EFI$reference_datetime[1]
+
+forecast_file <- paste("terrestrial_daily", file_date, "persistenceRW.csv.gz", sep = "-")
 
 write_csv(RW_forecasts_EFI, forecast_file)
 

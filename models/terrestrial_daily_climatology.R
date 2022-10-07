@@ -126,7 +126,9 @@ combined %>%
   geom_point(aes(y = mu)) +
   facet_wrap(~site_id)
 
-forecast_file <- paste("terrestrial_daily", min(combined$datetime), "climatology.csv.gz", sep = "-")
+file_date <- combined$reference_datetime[1]
+
+forecast_file <- paste("terrestrial_daily", file_date, "climatology.csv.gz", sep = "-")
 
 write_csv(combined, forecast_file)
 

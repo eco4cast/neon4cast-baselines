@@ -138,7 +138,9 @@ combined %>%
   facet_grid(variable~site_id, scales = "free") +
   theme_bw()
 
-forecast_file <- paste("aquatics", min(combined$datetime), "climatology.csv.gz", sep = "-")
+file_date <- combined$reference_datetime[1]
+
+forecast_file <- paste("aquatics", file_date, "climatology.csv.gz", sep = "-")
 
 write_csv(combined, forecast_file)
 

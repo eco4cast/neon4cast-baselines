@@ -116,8 +116,8 @@ ggplot(data, aes(x = datetime, y = observed)) +
 # Save file as CSV in the EFI format
 # [theme_name]-[time]-[team_name].csv
 theme_name <- "ticks"
-datetime <- as.character(min(forecast.submit$datetime))
-file.name <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
+file_date <- forecast$reference_datetime[1]
+file.name <- paste0(theme_name, "-", file_date, "-", team_name, ".csv.gz")
 
 write_csv(forecast.submit, file.name)
 

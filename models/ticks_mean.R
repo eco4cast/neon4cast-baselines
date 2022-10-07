@@ -55,8 +55,9 @@ forecast <- targets  %>%
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "ticks"
-datetime <- min(forecast$datetime)
-filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
+file_date <- forecast$reference_datetime[1]
+
+filename <- paste0(theme_name, "-", file_date, "-", team_name, ".csv.gz")
 
 ## Store the forecast products
 readr::write_csv(forecast, filename)

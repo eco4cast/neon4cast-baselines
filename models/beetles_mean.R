@@ -76,8 +76,9 @@ forecast <- bind_rows(as_tibble(fc_richness), as_tibble(fc_abundance)) |>
 
 ## Create the metadata record, see metadata.Rmd
 theme_name <- "beetles"
-datetime <- min(forecast$datetime)
-filename <- paste0(theme_name, "-", datetime, "-", team_name, ".csv.gz")
+file_date <- forecast$reference_datetime[1]
+
+filename <- paste0(theme_name, "-", file_date, "-", team_name, ".csv.gz")
 
 ## Store the forecast products
 readr::write_csv(forecast, filename)

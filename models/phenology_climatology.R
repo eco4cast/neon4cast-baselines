@@ -77,50 +77,12 @@ combined %>%
   geom_point(aes(y = mu)) +
   facet_wrap(~site_id)
 
-forecast_file <- paste("phenology", min(combined$datetime), "climatology.csv.gz", sep = "-")
+file_date <- combined$reference_datetime[1]
+
+forecast_file <- paste("phenology", file_date, "climatology.csv.gz", sep = "-")
 
 write_csv(combined, file = forecast_file)
 
-# Metadata
-
-team_list <- list(list(individualName = list(givenName = "Quinn", 
-                                             surName = "Thomas"),
-                       organizationName = "Virginia Tech",
-                       electronicMailAddress = "rqthomas@vt.edu"))
-
-model_metadata <- list(
-  forecast = list(
-    model_description = list(
-      forecast_model_id =  "climiatology",  #What goes here
-      name = "Historical day-of-year mean", 
-      type = "empirical",  
-      repository = "https://github.com/eco4cast/neon4cast-phenology/blob/master/phenology_climatology.R" 
-    ),
-    initial_conditions = list(
-      status = "absent"
-    ),
-    drivers = list(
-      status = "absent"
-    ),
-    parameters = list(
-      status = "absent"
-    ),
-    random_effects = list(
-      status = "absent"
-    ),
-    process_error = list(
-      status = "data_driven", #options: absent, present, data_driven, propagates, assimilates
-      complexity = 2 #Leave blank if status = absent
-    ),
-    obs_error = list(
-      status = "absent"
-    )
-  )
-)
-
-#meta_data_filename <- neon4cast::generate_metadata(forecast_file = forecast_file,
-#                                                   team_list = team_list,
-#                                                   model_metadata = model_metadata)
 
 neon4cast::submit(forecast_file = forecast_file, 
                   metadata = NULL, 
