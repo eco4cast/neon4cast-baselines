@@ -48,8 +48,8 @@ site_names <- sites$field_site_id
 target_clim <- targets %>%  
   mutate(doy = yday(datetime)) %>% 
   group_by(doy, site_id, variable) %>% 
-  summarise(clim_mean = mean(observed, na.rm = TRUE),
-            clim_sd = sd(observed, na.rm = TRUE),
+  summarise(clim_mean = mean(observation, na.rm = TRUE),
+            clim_sd = sd(observation, na.rm = TRUE),
             .groups = "drop") %>% 
   mutate(clim_mean = ifelse(is.nan(clim_mean), NA, clim_mean))
 

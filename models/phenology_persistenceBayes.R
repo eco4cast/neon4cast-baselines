@@ -74,7 +74,7 @@ for(i in 1:length(target_variables)){
     forecast_start_index <- which(full_datetime$datetime == max(sitePhenoDat$datetime) + lubridate::days(1))
    
      d <- tibble::tibble(datetime = sitePhenoDat_variable$datetime,
-                        p=as.numeric(sitePhenoDat_variable$observed),
+                        p=as.numeric(sitePhenoDat_variable$observation),
                         p.sd=as.numeric(sitePhenoDat_variable$sd))
     d <- dplyr::full_join(d, full_datetime)
     
@@ -131,7 +131,7 @@ for(i in 1:length(target_variables)){
       select(datetime, y, ensemble)
     
     if(generate_plots){
-      #Pull in the observed data for plotting
+      #Pull in the observation data for plotting
       obs <- tibble(datetime = d$datetime,
                     obs = d$p) %>% 
         filter(datetime >= max(sitePhenoDat$datetime))

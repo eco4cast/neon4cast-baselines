@@ -18,24 +18,24 @@ site_list <- unique(targets$site_id)
 last_day_richness <- tibble(site_id = site_list,
                    datetime = rep(curr_date, length(site_list)),
                    variable = "richness",
-                   observed = NA)
+                   observation = NA)
 
 last_day_abundance <- tibble(site_id = site_list,
                             datetime = rep(curr_date, length(site_list)),
                             variable = "abundance",
-                            observed = NA)
+                            observation = NA)
 
 targets_richness <- targets |> 
   filter(variable == "richness") |> 
   bind_rows(last_day_richness) |> 
-  rename(richness = observed) |> 
+  rename(richness = observation) |> 
   select(-variable) |> 
   as_tsibble(index = datetime, key = site_id)
 
 targets_abundance <- targets |> 
   filter(variable == "abundance") |> 
   bind_rows(last_day_abundance) |> 
-  rename(abundance = observed) |> 
+  rename(abundance = observation) |> 
   select(-variable) |> 
   as_tsibble(index = datetime, key = site_id)
 
@@ -63,7 +63,7 @@ fc_richness |>
 
 targets |> 
   filter(site_id %in% site_list[1:10], variable == "richness") |> 
-  ggplot(aes(x = datetime, y = observed)) +
+  ggplot(aes(x = datetime, y = observation)) +
   geom_point() +
   facet_wrap(~site_id)
 

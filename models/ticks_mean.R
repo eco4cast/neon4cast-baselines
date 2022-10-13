@@ -30,7 +30,7 @@ site_list <- unique(targets$site_id)
 last_day <- tibble(site_id = site_list,
                    datetime = rep(curr_date, length(site_list)),
                    variable = "amblyomma_americanum",
-                   observed = NA)
+                   observation = NA)
 
 
 
@@ -44,7 +44,7 @@ team_name <- "mean"
 
 ## a single mean per site... obviously silly
 forecast <- targets  %>% 
-  model(null = MEAN(log(observed + 1))) %>%
+  model(null = MEAN(log(observation + 1))) %>%
   generate(times = 500, h = "1 year", bootstrap = TRUE) |> 
   dplyr::rename(ensemble = .rep,
                 prediction = .sim) |> 

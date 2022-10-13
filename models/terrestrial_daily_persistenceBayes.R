@@ -51,7 +51,7 @@ terrestrial_targets <- read_csv("terrestrial_daily-targets.csv.gz", guess_max = 
 
 terrestrial_targets |> 
   group_by(variable) |> 
-  summarize(mean = quantile(observed, 0.75, na.rm = TRUE))
+  summarize(mean = quantile(observation, 0.75, na.rm = TRUE))
 
 terrestrial_targets <- terrestrial_targets #%>% 
   #filter(time < as_date("2020-12-01"))
@@ -117,7 +117,7 @@ for(s in 1:length(site_names)){
     filter(site_id == site_names[s], 
            datetime >= lubridate::as_date("2020-01-01")) 
   
-  # Find the last day in the observed data and add one day for the start of the 
+  # Find the last day in the observation data and add one day for the start of the 
   # forecast
   start_forecast <- max(site_data_var$datetime) + days(1)
   
@@ -127,10 +127,10 @@ for(s in 1:length(site_names)){
   # Join the full datetime with the site_data_var so there aren't gaps in the datetime column
   site_data_var <- left_join(full_datetime, site_data_var)
   
-  #observed NEE: Full datetime series with gaps
-  y_wgaps <- site_data_var$observed
+  #observation NEE: Full datetime series with gaps
+  y_wgaps <- site_data_var$observation
   datetime <- c(site_data_var$datetime)
-  #observed NEE: datetime series without gaps
+  #observation NEE: datetime series without gaps
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]
   #Index: datetime series with gaps
   y_wgaps_index <- 1:length(y_wgaps)
@@ -182,7 +182,7 @@ for(s in 1:length(site_names)){
     select(datetime, y, ensemble)
   
   if(generate_plots){
-    #Pull in the observed data for plotting
+    #Pull in the observation data for plotting
     obs <- tibble(datetime = full_datetime$datetime,
                   obs = y_wgaps)
     
@@ -246,7 +246,7 @@ for(s in 1:length(site_names)){
   
   site_data_var <- left_join(full_datetime, site_data_var)
   
-  y_wgaps <- site_data_var$observed
+  y_wgaps <- site_data_var$observation
   datetime <- c(site_data_var$datetime)
   
   y_nogaps <- y_wgaps[!is.na(y_wgaps)]

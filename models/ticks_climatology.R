@@ -29,8 +29,8 @@ hist_means <- function(df, target.weeks){
   weekly.means <- df %>% 
     mutate(iso_week = as.numeric(stringr::str_sub(iso_week, 7, 8))) |> 
     group_by(site_id, iso_week) %>% 
-    summarise(mean = mean(observed),
-              sd = sd(observed))
+    summarise(mean = mean(observation),
+              sd = sd(observation))
   
   
   # need to fill in NAs and need to do on all data before sub-setting to target weeks
@@ -109,7 +109,7 @@ ggplot(forecast.submit, aes(x = datetime, y = prediction)) +
   geom_point() +
   facet_wrap(~site_id)
 
-ggplot(data, aes(x = datetime, y = observed)) +
+ggplot(data, aes(x = datetime, y = observation)) +
   geom_point() +
   facet_wrap(~site_id)
 

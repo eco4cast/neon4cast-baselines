@@ -5,7 +5,7 @@ source('R/fablePersistenceModelFunction.R')
 
 # 1.Read in the targets data
 targets <- read_csv('https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz') %>%
-  mutate(observed = ifelse(observed == 0 & variable == "chla", 0.00001, observed))
+  mutate(observation = ifelse(observation == 0 & variable == "chla", 0.00001, observation))
 
 # 2. Make the targets into a tsibble with explicit gaps
 targets_ts <- targets %>%

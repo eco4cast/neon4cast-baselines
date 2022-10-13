@@ -11,8 +11,8 @@ target <- read_csv(download_url)
 target_clim <- target %>%  
   mutate(doy = yday(datetime)) %>% 
   group_by(doy, site_id, variable) %>% 
-  summarise(mean = mean(observed, na.rm = TRUE),
-            sd = sd(observed, na.rm = TRUE),
+  summarise(mean = mean(observation, na.rm = TRUE),
+            sd = sd(observation, na.rm = TRUE),
             .groups = "drop") %>% 
   mutate(mean = ifelse(is.nan(mean), NA, mean))
 

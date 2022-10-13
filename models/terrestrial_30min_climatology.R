@@ -43,7 +43,7 @@ for(s in 1:length(site_names)){
   max_datetime <- max(site_data_var$datetime) + days(1)
   
   
-  min_datetime <- min(which(!is.na(site_data_var$observed)))
+  min_datetime <- min(which(!is.na(site_data_var$observation)))
   # This is key here - I added 16 days on the end of the data for the forecast period
   
   full_datetime1 <- tibble(datetime = seq(site_data_var$datetime[min_datetime], max(site_data_var$datetime), by = "30 min"),
@@ -60,7 +60,7 @@ for(s in 1:length(site_names)){
   ############ NEE  #############
   
   #Full datetime series with gaps
-  y_wgaps <- site_data_var$observed[which(site_data_var$variable == "nee")]
+  y_wgaps <- site_data_var$observation[which(site_data_var$variable == "nee")]
   datetime <- c(site_data_var$datetime[which(site_data_var$variable == "nee")])
   #Remove gaps
   t_nogaps <- datetime[!is.na(y_wgaps)]
@@ -92,7 +92,7 @@ for(s in 1:length(site_names)){
   ############ Latent heat ############
   
   #Full datetime series with gaps
-  y_wgaps <- site_data_var$observed[which(site_data_var$variable == "le")]
+  y_wgaps <- site_data_var$observation[which(site_data_var$variable == "le")]
   datetime <- c(site_data_var$datetime[which(site_data_var$variable == "le")])
   #Remove gaps
   t_nogaps <- datetime[!is.na(y_wgaps)]

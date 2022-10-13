@@ -5,7 +5,7 @@ RW_daily_forecast <- function(site, var, h,
                         transformation = 'none', verbose = TRUE,...) {
   # Work out when the forecast should start
   forecast_starts <- targets %>%
-    dplyr::filter(!is.na(observed) & site_id == site & variable == var) %>%
+    dplyr::filter(!is.na(observation) & site_id == site & variable == var) %>%
     # Start the day after the most recent non-NA value
     dplyr::summarise(start_date = max(datetime) + lubridate::days(1)) %>% # Date
     dplyr::mutate(h = (Sys.Date() - start_date) + h) %>% # Horizon value
@@ -48,19 +48,19 @@ RW_daily_forecast <- function(site, var, h,
   } else {
     if (transformation == 'log') {
       RW_model <- targets_use %>%
-        fabletools::model(RW = fable::RW(log(observed)))
+        fabletools::model(RW = fable::RW(log(observation)))
     }
     if (transformation == 'log1p') {
       RW_model <- targets_use %>%
-        fabletools::model(RW = fable::RW(log1p(observed)))
+        fabletools::model(RW = fable::RW(log1p(observation)))
     }
     if (transformation == 'none') {
       RW_model <- targets_use %>%
-        fabletools::model(RW = fable::RW(observed))
+        fabletools::model(RW = fable::RW(observation))
     }
     if (transformation == 'sqrt') {
       RW_model <- targets_use %>%
-        fabletools::model(RW = fable::RW(sqrt(observed)))
+        fabletools::model(RW = fable::RW(sqrt(observation)))
     }
     
     if (bootstrap == T) {
