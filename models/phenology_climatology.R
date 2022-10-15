@@ -58,6 +58,10 @@ forecast <- left_join(forecast_tibble, forecast)
 combined <- forecast %>% 
   select(datetime, site_id, mean, sd, variable) %>% 
   group_by(site_id, variable) %>% 
+  # remove rows where all in group are NA
+  filter(all(!is.na(mean))) %>%
+  # retain rows where group size >= 2, to allow interpolation
+  filter(n() >= 2) %>%
   mutate(mu = imputeTS::na_interpolation(mean),
          sigma = median(sd, na.rm = TRUE)) %>%
   pivot_longer(c("mu", "sigma"),names_to = "parameter", values_to = "prediction") |> 
