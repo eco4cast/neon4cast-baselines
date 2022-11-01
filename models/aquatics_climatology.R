@@ -84,7 +84,7 @@ combined %>%
 
 file_date <- combined$reference_datetime[1]
 
-forecast_file <- paste("phenology", file_date, "climatology.csv.gz", sep = "-")
+forecast_file <- paste("aquatics", file_date, "climatology.csv.gz", sep = "-")
 
 write_csv(combined, file = forecast_file)
 
