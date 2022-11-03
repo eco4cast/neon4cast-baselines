@@ -70,8 +70,6 @@ if(curr_month < 10){
 curr_year <- year(Sys.Date())
 start_date <- Sys.Date() + days(1)
 
-start_date <- lubridate::as_date("2022-11-02")
-
 forecast_dates <- seq(start_date, as_date(start_date + days(34)), "1 day")
 forecast_doy <- yday(forecast_dates)
 
