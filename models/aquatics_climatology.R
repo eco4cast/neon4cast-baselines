@@ -51,7 +51,9 @@ site_names <- sites$field_site_id
 
 # calculates a doy average for each target variable in each site
 target_clim <- targets %>%  
-  mutate(doy = yday(datetime)) %>% 
+  mutate(doy = yday(datetime),
+         year = year(datetime)) %>% 
+  filter(year < year(Sys.Date())) |> 
   group_by(doy, site_id, variable) %>% 
   summarise(mean = mean(observation, na.rm = TRUE),
             sd = sd(observation, na.rm = TRUE),
