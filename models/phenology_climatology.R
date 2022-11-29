@@ -16,7 +16,7 @@ target_clim <- target %>%
             .groups = "drop") %>% 
   mutate(mean = ifelse(is.nan(mean), NA, mean))
 
-#curr_month <- month(Sys.Date())
+curr_year <- year(Sys.Date())
 curr_month <- month(Sys.Date())
 if(curr_month < 10){
   curr_month <- paste0("0", curr_month)
@@ -28,13 +28,15 @@ start_date <- Sys.Date() + days(1)
 forecast_dates <- seq(start_date, as_date(start_date + days(34)), "1 day")
 forecast_doy <- yday(forecast_dates)
 
+forecast_dates_df <- tibble(datetime = forecast_dates,
+                            doy = forecast_doy)
+
 forecast <- target_clim %>%
   mutate(doy = as.integer(doy)) %>% 
   filter(doy %in% forecast_doy) %>% 
-  mutate(datetime = as_date(ifelse(doy > last(doy),
-                               as_date((doy-1), origin = paste(year(Sys.Date())+1, "01", "01", sep = "-")),
-                               as_date((doy-1), origin = paste(year(Sys.Date()), "01", "01", sep = "-")))))
-
+  full_join(forecast_dates_df, by = 'doy') %>%
+  arrange(site_id, datetime)
+  
 subseted_site_names <- unique(forecast$site_id)
 site_vector <- NULL
 for(i in 1:length(subseted_site_names)){
@@ -59,7 +61,7 @@ combined <- forecast %>%
   select(datetime, site_id, mean, sd, variable) %>% 
   group_by(site_id, variable) %>% 
   # remove rows where all in group are NA
-  filter(all(!is.na(mean))) %>%
+  filter(!is.na(mean)) %>%
   # retain rows where group size >= 2, to allow interpolation
   filter(n() >= 2) %>%
   mutate(mu = imputeTS::na_interpolation(mean),
