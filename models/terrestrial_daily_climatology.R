@@ -65,12 +65,14 @@ start_date <- Sys.Date() + days(1)
 forecast_dates <- seq(start_date, as_date(start_date + days(35)), "1 day")
 forecast_doy <- yday(forecast_dates)
 
+forecast_dates_df <- tibble(datetime = forecast_dates,
+                            doy = forecast_doy)
+
 forecast <- target_clim %>%
   mutate(doy = as.integer(doy)) %>% 
   filter(doy %in% forecast_doy) %>% 
-  mutate(datetime = as_date(ifelse(doy > last(doy),
-                               as_date((doy-1), origin = paste(year(Sys.Date())+1, "01", "01", sep = "-")),
-                               as_date((doy-1), origin = paste(year(Sys.Date()), "01", "01", sep = "-")))))
+  full_join(forecast_dates_df, by = 'doy') %>%
+  arrange(site_id, datetime)
 
 subseted_site_names <- unique(forecast$site_id)
 site_vector <- NULL
